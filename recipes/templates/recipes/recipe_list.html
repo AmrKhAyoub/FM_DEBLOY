@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Recipes</title>
+</head>
+<body>
+    <h1>All Recipes</h1>
+
+    {% if recipes %}
+        <ul>
+            {% for recipe in recipes %}
+                <li>{{ recipe.name }} — {{ recipe.meal_type }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No recipes found yet.</p>
+    {% endif %}
+</body>
+</html>
