@@ -5,11 +5,25 @@
 </head>
 <body>
     <h1>All Recipes</h1>
+    <form method="get">
+      <input type="text" name="q" placeholder="Search recipes..." value="{{ query|default:'' }}">
+      <input type="text" name="cuisine" placeholder="Cuisine (e.g. Italian)" value="{{ cuisine|default:'' }}">
+      <!-- filter by meal type and cuisine -->
+
+      <select name="meal_type">
+        <option value="">All meal types</option>
+        <option value="breakfast" {% if meal_type == "breakfast" %}selected{% endif %}>Breakfast</option>
+
+        <option value="lunch" {% if meal_type == "lunch" %}selected{% endif %}>Lunch</option>
+        <option value="dinner" {% if meal_type == "dinner" %}selected{% endif %}>Dinner</option>
+    </select>
+      <button type="submit">Search</button>
+    </form>
 
     {% if recipes %}
         <ul>
             {% for recipe in recipes %}
-                <li>{{ recipe.name }} — {{ recipe.meal_type }}</li>
+                <li><a href="{% url 'recipe_detail' recipe.id %}">{{ recipe.name }}</a> — {{ recipe.meal_type }}</li>
             {% endfor %}
         </ul>
     {% else %}

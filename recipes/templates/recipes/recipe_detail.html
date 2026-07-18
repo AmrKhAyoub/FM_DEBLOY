@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ recipe.name }}</title>
+</head>
+<body>
+    <a href="{% url 'recipe_list' %}">&larr; Back to all recipes</a>
+
+    <h1>{{ recipe.name }}</h1>
+    <p><strong>Meal type:</strong> {{ recipe.meal_type }}</p>
+    <p><strong>Cuisine:</strong> {{ recipe.cuisine }}</p>
+
+    <h2>Ingredients</h2>
+    <ul>
+        {% for ingredient in recipe.ingredients.all %}
+            <li>{{ ingredient.ingredient_name }} — {{ ingredient.quantity }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Instructions</h2>
+    <p>{{ recipe.instructions }}</p>
+</body>
+</html>

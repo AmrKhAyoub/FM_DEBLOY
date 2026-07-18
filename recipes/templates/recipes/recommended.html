@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Recommended for You</title>
+</head>
+<body>
+    <a href="{% url 'recipe_list' %}">&larr; Back to all recipes</a>
+
+    <h1>Recommended for You</h1>
+
+    {% if scored_recipes %}
+        <ul>
+            {% for item in scored_recipes %}
+                <li>
+                    <a href="{% url 'recipe_detail' item.recipe.id %}">{{ item.recipe.name }}</a>
+                    — {{ item.matched }}/{{ item.total }} ingredients you have
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No recipes found.</p>
+    {% endif %}
+</body>
+</html>
