@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from .models import Recipe
 from pantry.models import Ingredient
+from shopping_list.models import ShoppingListItem
 
 def recipe_list(request):
     query = request.GET.get('q')
@@ -24,24 +25,32 @@ def recipe_list(request):
         'meal_type': meal_type,
         'cuisine': cuisine,
     })
+
+
 def recipe_detail(request, recipe_id):
     recipe = get_object_or_404(Recipe, id=recipe_id)
 
     pantry_items = Ingredient.objects.filter(owner=request.user)
     pantry_names = set(item.name.lower().strip() for item in pantry_items)
 
+    shopping_items = ShoppingListItem.objects.filter(owner=request.user)
+    shopping_names = set(item.item_name.lower().strip() for item in shopping_items)
+
     ingredients_with_status = []
     for ri in recipe.ingredients.all():
         has_it = ri.ingredient_name.lower().strip() in pantry_names
+        in_shopping_list = ri.ingredient_name.lower().strip() in shopping_names
         ingredients_with_status.append({
             'ingredient': ri,
             'has_it': has_it,
+            'in_shopping_list': in_shopping_list,
         })
 
     return render(request, 'recipes/recipe_detail.html', {
         'recipe': recipe,
         'ingredients_with_status': ingredients_with_status,
     })
+
 
 
 def recommended_recipes(request):
@@ -71,4 +80,20 @@ def recommended_recipes(request):
     scored_recipes.sort(key=lambda x: x['matched'], reverse=True)
 
     return render(request, 'recipes/recommended.html', {'scored_recipes': scored_recipes})
+
+def live_search(request):
+    query = request.GET.get('q', '')
+    meal_type = request.GET.get('meal_type', '')
+    cuisine = request.GET.get('cuisine', '')
+
+    recipes = Recipe.objects.all()
+
+    if query:
+        recipes = recipes.filter(name__icontains=query)
+    if meal_type:
+        recipes = recipes.filter(meal_type=meal_type)
+    if cuisine:
+        recipes = recipes.filter(cuisine__icontains=cuisine)
+
+    return render(request, 'recipes/_recipe_results.html', {'recipes': recipes})   #just the results list, not a full HTML page 
     

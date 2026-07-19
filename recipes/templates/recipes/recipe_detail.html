@@ -5,6 +5,7 @@
 </head>
 <body>
     <a href="{% url 'recipe_list' %}">&larr; Back to all recipes</a>
+    <p><a href="{% url 'shopping_list' %}">View my shopping list</a></p>
 
     <h1>{{ recipe.name }}</h1>
     <p><strong>Meal type:</strong> {{ recipe.meal_type }}</p>
@@ -17,8 +18,19 @@
             {% if item.has_it %}
                 ✅ {{ item.ingredient.ingredient_name }} — {{ item.ingredient.quantity }} (you have this)
             {% else %}
-                ❌ {{ item.ingredient.ingredient_name }} — {{ item.ingredient.quantity }} (missing)
-            {% endif %}
+                 ❌ {{ item.ingredient.ingredient_name }} — {{ item.ingredient.quantity }} (missing)
+                 {% if item.in_shopping_list %}
+                      <span>✓ Already on shopping list</span>
+                 {% else %}
+                     <form method="post" action="{% url 'add_from_recipe' %}" style="display:inline;">
+                         {% csrf_token %}
+                         <input type="hidden" name="item_name" value="{{ item.ingredient.ingredient_name }}">
+                         <input type="hidden" name="quantity" value="{{ item.ingredient.quantity }}">
+                         <input type="hidden" name="recipe_id" value="{{ recipe.id }}">
+                         <button type="submit">Add to shopping list</button>
+                     </form>
+                 {% endif %}
+             {% endif %}
         </li>
     {% endfor %}
 </ul>

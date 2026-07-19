@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shopping List</title>
+</head>
+<body>
+    {% csrf_token %}
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <h1>My Shopping List</h1>
+
+    <form method="post" action="{% url 'add_item' %}">
+        {% csrf_token %}
+        <input type="text" name="item_name" placeholder="Item name" required>
+        <input type="text" name="quantity" placeholder="Quantity (optional)">
+        <button type="submit">Add Item</button>
+    </form>
+
+    {% if items %}
+        <ul>
+            {% for item in items %}
+                <li id="item-{{ item.id }}">
+                    {% if item.purchased %}
+                        <s>{{ item.item_name }}</s>
+                    {% else %}
+                        {{ item.item_name }}
+                    {% endif %}
+                    —
+                    <span class="quantity-view" id="quantity-view-{{ item.id }}">{{ item.quantity }}</span>
+
+                    <span class="quantity-edit" id="quantity-edit-{{ item.id }}" style="display:none;">
+                        <input type="text" id="quantity-input-{{ item.id }}" value="{{ item.quantity }}" size="10">
+                        <button onclick="saveQuantity({{ item.id }})">Save</button>
+                        <button onclick="cancelEdit({{ item.id }})">Cancel</button>
+                    </span>
+
+                    <button onclick="startEdit({{ item.id }})" class="edit-btn-{{ item.id }}">Edit</button>
+
+                    <a href="{% url 'toggle_purchased' item.id %}">
+                        {% if item.purchased %}Mark as not bought{% else %}Mark as bought{% endif %}
+                    </a>
+                    <a href="{% url 'delete_item' item.id %}">Delete</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Your shopping list is empty.</p>
+    {% endif %}
+
+    <script>
+        function startEdit(itemId) {
+            document.getElementById('quantity-view-' + itemId).style.display = 'none';
+            document.getElementById('quantity-edit-' + itemId).style.display = 'inline';
+            document.querySelector('.edit-btn-' + itemId).style.display = 'none';
+        }
+
+        function cancelEdit(itemId) {
+            document.getElementById('quantity-view-' + itemId).style.display = 'inline';
+            document.getElementById('quantity-edit-' + itemId).style.display = 'none';
+            document.querySelector('.edit-btn-' + itemId).style.display = 'inline';
+        }
+
+        function saveQuantity(itemId) {
+            const newQuantity = document.getElementById('quantity-input-' + itemId).value;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch('/shopping-list/edit/' + itemId + '/', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'quantity=' + encodeURIComponent(newQuantity),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('quantity-view-' + itemId).textContent = data.quantity;
+                    cancelEdit(itemId);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
