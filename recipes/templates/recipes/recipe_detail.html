@@ -11,11 +11,17 @@
     <p><strong>Cuisine:</strong> {{ recipe.cuisine }}</p>
 
     <h2>Ingredients</h2>
-    <ul>
-        {% for ingredient in recipe.ingredients.all %}
-            <li>{{ ingredient.ingredient_name }} — {{ ingredient.quantity }}</li>
-        {% endfor %}
-    </ul>
+<ul>
+    {% for item in ingredients_with_status %}
+        <li>
+            {% if item.has_it %}
+                ✅ {{ item.ingredient.ingredient_name }} — {{ item.ingredient.quantity }} (you have this)
+            {% else %}
+                ❌ {{ item.ingredient.ingredient_name }} — {{ item.ingredient.quantity }} (missing)
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>
 
     <h2>Instructions</h2>
     <p>{{ recipe.instructions }}</p>

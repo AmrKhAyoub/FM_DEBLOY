@@ -26,7 +26,22 @@ def recipe_list(request):
     })
 def recipe_detail(request, recipe_id):
     recipe = get_object_or_404(Recipe, id=recipe_id)
-    return render(request, 'recipes/recipe_detail.html', {'recipe': recipe})
+
+    pantry_items = Ingredient.objects.filter(owner=request.user)
+    pantry_names = set(item.name.lower().strip() for item in pantry_items)
+
+    ingredients_with_status = []
+    for ri in recipe.ingredients.all():
+        has_it = ri.ingredient_name.lower().strip() in pantry_names
+        ingredients_with_status.append({
+            'ingredient': ri,
+            'has_it': has_it,
+        })
+
+    return render(request, 'recipes/recipe_detail.html', {
+        'recipe': recipe,
+        'ingredients_with_status': ingredients_with_status,
+    })
 
 
 def recommended_recipes(request):
