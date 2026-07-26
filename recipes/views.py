@@ -1,8 +1,10 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render
+from django.views.decorators.http import require_GET
 
 from pantry.models import PantryItem
 from shopping_list.models import ShoppingListItem
+from .forms import RecipeSearchFilterForm
 from .models import Recipe
 
 
@@ -13,40 +15,42 @@ def get_pantry_quantities(user):
 
 
 def _filter_recipes(request):
-    """Helper function to filter recipes based on query parameters."""
-    query = request.GET.get('q')
-    meal_type = request.GET.get('meal_type')
-    category = request.GET.get('category')
-
+    """Helper function to validate filter GET params using RecipeSearchFilterForm."""
+    form = RecipeSearchFilterForm(request.GET)
     recipes = Recipe.objects.all()
 
-    if query:
-        recipes = recipes.filter(title__icontains=query)
-    if meal_type:
-        recipes = recipes.filter(meal_type=meal_type)
-    if category:
-        recipes = recipes.filter(category=category)
+    if form.is_valid():
+        search_query = form.cleaned_data.get('search_query')
+        meal_type = form.cleaned_data.get('meal_type')
+        category = form.cleaned_data.get('category')
 
-    # Fixed unordered slicing by adding explicit order_by
-    return recipes.order_by('title'), query, meal_type, category
+        if search_query:
+            recipes = recipes.filter(title__icontains=search_query)
+        if meal_type:
+            recipes = recipes.filter(meal_type=meal_type)
+        if category:
+            recipes = recipes.filter(category=category)
+
+    # adding explicit order_by to ensure consistent ordering of recipes
+    return recipes.order_by('title'), form
 
 
+@require_GET
 def recipe_list(request):
-    recipes, query, meal_type, category = _filter_recipes(request)
+    recipes, form = _filter_recipes(request)
 
     return render(
         request,
         'recipes/recipe_list.html',
         {
             'recipes': recipes[:20],
-            'query': query,
-            'meal_type': meal_type,
-            'category': category,
+            'form': form,
         },
     )
 
 
 @login_required
+@require_GET
 def recipe_detail(request, recipe_id):
     recipe = get_object_or_404(
         Recipe.objects.prefetch_related('recipeingredient_set__ingredient'),
@@ -91,6 +95,7 @@ def recipe_detail(request, recipe_id):
 
 
 @login_required
+@require_GET
 def recommended_recipes(request):
     pantry_ingredient_ids = set(
         PantryItem.objects.filter(user=request.user).values_list('ingredient_id', flat=True)
@@ -101,7 +106,7 @@ def recommended_recipes(request):
 
     for recipe in all_recipes:
         recipe_ingredients = recipe.recipeingredient_set.all()
-        
+
         total_needed = len(recipe_ingredients)
         matched = sum(1 for ri in recipe_ingredients if ri.ingredient.id in pantry_ingredient_ids)
 
@@ -116,7 +121,8 @@ def recommended_recipes(request):
     return render(request, 'recipes/recommended.html', {'scored_recipes': scored_recipes})
 
 
+@require_GET
 def live_search(request):
-    recipes, _, _, _ = _filter_recipes(request)
+    recipes, _ = _filter_recipes(request)
 
     return render(request, 'recipes/_recipe_results.html', {'recipes': recipes[:20]})

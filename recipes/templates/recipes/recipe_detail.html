@@ -79,9 +79,9 @@
                         <span>✓ Already on shopping list</span>
                     {% else %}
                         <span class="hover-add-btn">
-                            <form method="post" action="{% url 'shopping_list:add_from_recipe' %}" class="inline-form">
+                            <form method="post" action="{% url 'shopping_list:add_item' %}" class="inline-form">
                                 {% csrf_token %}
-                                <input type="hidden" name="ingredient_id" value="{{ item.ri.ingredient.id }}">
+                                <input type="hidden" name="ingredient" value="{{ item.ri.ingredient.id }}">
                                 <input type="hidden" name="quantity_needed" value="{{ item.missing_qty }}">
                                 <input type="hidden" name="recipe_id" value="{{ recipe.id }}">
                                 <button type="submit">Add to shopping list</button>

@@ -84,7 +84,7 @@ class RecipeIngredient(models.Model):
     required_quantity = models.DecimalField(max_digits=8, decimal_places=2)
 
     class Meta:
-        # Modernized unique_together to UniqueConstraint
+        # make the combination of recipe and ingredient unique to prevent duplicates
         constraints = [
             models.UniqueConstraint(fields=["recipe", "ingredient"], name="unique_recipe_ingredient")
         ]

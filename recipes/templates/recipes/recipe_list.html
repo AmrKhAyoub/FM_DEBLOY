@@ -7,25 +7,9 @@
     <h1>All Recipes</h1>
 
     <form method="get" action="{% url 'recipes:recipe_list' %}">
-        <input type="text" name="q" id="search-box" placeholder="Search recipes..." value="{{ query|default:'' }}" oninput="liveSearch()">
-
-        <select name="category" id="category-box" onchange="liveSearch()">
-            <option value="">All categories</option>
-            <option value="dessert" {% if category == "dessert" %}selected{% endif %}>Dessert</option>
-            <option value="pastries" {% if category == "pastries" %}selected{% endif %}>Pastries</option>
-            <option value="grills" {% if category == "grills" %}selected{% endif %}>Grills</option>
-            <option value="soups" {% if category == "soups" %}selected{% endif %}>Soups</option>
-            <option value="salads" {% if category == "salads" %}selected{% endif %}>Salads</option>
-            <option value="main_dish" {% if category == "main_dish" %}selected{% endif %}>Main Dish</option>
-        </select>
-
-        <select name="meal_type" id="meal-type-box" onchange="liveSearch()">
-            <option value="">All meal types</option>
-            <option value="breakfast" {% if meal_type == "breakfast" %}selected{% endif %}>Breakfast</option>
-            <option value="lunch" {% if meal_type == "lunch" %}selected{% endif %}>Lunch</option>
-            <option value="dinner" {% if meal_type == "dinner" %}selected{% endif %}>Dinner</option>
-            <option value="snack" {% if meal_type == "snack" %}selected{% endif %}>Snack</option>
-        </select>
+        {{ form.search_query }}
+        {{ form.category }}
+        {{ form.meal_type }}
 
         <button type="submit">Search</button>
     </form>
@@ -40,11 +24,16 @@
         function liveSearch() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                const query = document.getElementById('search-box').value;
-                const category = document.getElementById('category-box').value;
-                const mealType = document.getElementById('meal-type-box').value;
+                // Django automatically assigns element IDs matching 'id_<fieldname>'
+                const query = document.getElementById('id_search_query').value;
+                const category = document.getElementById('id_category').value;
+                const mealType = document.getElementById('id_meal_type').value;
 
-                const params = new URLSearchParams({ q: query, category: category, meal_type: mealType });
+                const params = new URLSearchParams({
+                    search_query: query,
+                    category: category,
+                    meal_type: mealType
+                });
 
                 fetch("{% url 'recipes:live_search' %}?" + params.toString())
                     .then(response => response.text())
@@ -53,6 +42,17 @@
                     });
             }, 300);
         }
+
+        // Attach event listeners to the Django form fields once the page loads
+        document.addEventListener("DOMContentLoaded", function () {
+            const searchInput = document.getElementById('id_search_query');
+            const categorySelect = document.getElementById('id_category');
+            const mealTypeSelect = document.getElementById('id_meal_type');
+
+            if (searchInput) searchInput.addEventListener('input', liveSearch);
+            if (categorySelect) categorySelect.addEventListener('change', liveSearch);
+            if (mealTypeSelect) mealTypeSelect.addEventListener('change', liveSearch);
+        });
     </script>
 </body>
 </html>
