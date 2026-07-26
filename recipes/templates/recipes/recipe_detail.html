@@ -1,39 +1,97 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ recipe.name }}</title>
+    <title>{{ recipe.title }}</title>
+    <style>
+        .hover-add-btn {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        li:hover .hover-add-btn {
+            opacity: 1;
+        }
+        .inline-form {
+            display: inline;
+        }
+
+        /* Button styles */
+        .btn-add-all {
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-add-all:hover {
+            background-color: #0056b3;
+        }
+        .btn-added {
+            background-color: #28a745;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: not-allowed;
+            font-weight: bold;
+            opacity: 0.9;
+        }
+    </style>
 </head>
 <body>
-    <a href="{% url 'recipe_list' %}">&larr; Back to all recipes</a>
-    <p><a href="{% url 'shopping_list' %}">View my shopping list</a></p>
+    <a href="{% url 'recipes:recipe_list' %}">&larr; Back to all recipes</a>
+    <p><a href="{% url 'shopping_list:shopping_list' %}">View my shopping list</a></p>
 
-    <h1>{{ recipe.name }}</h1>
+    <h1>{{ recipe.title }}</h1>
     <p><strong>Meal type:</strong> {{ recipe.meal_type }}</p>
-    <p><strong>Cuisine:</strong> {{ recipe.cuisine }}</p>
+    <p><strong>Category:</strong> {{ recipe.category }}</p>
+    <p><strong>Prep time:</strong> {{ recipe.prep_time }} minutes</p>
 
     <h2>Ingredients</h2>
-<ul>
-    {% for item in ingredients_with_status %}
-        <li>
-            {% if item.has_it %}
-                ✅ {{ item.ingredient.ingredient_name }} — {{ item.ingredient.quantity }} (you have this)
-            {% else %}
-                 ❌ {{ item.ingredient.ingredient_name }} — {{ item.ingredient.quantity }} (missing)
-                 {% if item.in_shopping_list %}
-                      <span>✓ Already on shopping list</span>
-                 {% else %}
-                     <form method="post" action="{% url 'add_from_recipe' %}" style="display:inline;">
-                         {% csrf_token %}
-                         <input type="hidden" name="item_name" value="{{ item.ingredient.ingredient_name }}">
-                         <input type="hidden" name="quantity" value="{{ item.ingredient.quantity }}">
-                         <input type="hidden" name="recipe_id" value="{{ recipe.id }}">
-                         <button type="submit">Add to shopping list</button>
-                     </form>
-                 {% endif %}
-             {% endif %}
-        </li>
-    {% endfor %}
-</ul>
+
+    {% if all_missing_added %}
+        <button type="button" class="btn-added" disabled>
+            ✓ All missing ingredients added to shopping list
+        </button>
+    {% else %}
+        <form method="post" action="{% url 'shopping_list:add_all_missing' recipe.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-add-all">
+                Add all missing ingredients to shopping list
+            </button>
+        </form>
+    {% endif %}
+
+    <ul>
+        {% for item in ingredients_with_status %}
+            <li>
+                {% if item.has_enough %}
+                    ✅ {{ item.ri.ingredient.title }} — need {{ item.ri.required_quantity|floatformat:"-2" }} {{ item.ri.ingredient.unit }} (you have {{ item.available_qty|floatformat:"-2" }})
+                {% else %}
+                    {% if item.available_qty > 0 %}
+                        ❌ {{ item.ri.ingredient.title }} — need {{ item.ri.required_quantity|floatformat:"-2" }} {{ item.ri.ingredient.unit }}, you have {{ item.available_qty|floatformat:"-2" }} (short {{ item.missing_qty|floatformat:"-2" }})
+                    {% else %}
+                        ❌ {{ item.ri.ingredient.title }} — need {{ item.ri.required_quantity|floatformat:"-2" }} {{ item.ri.ingredient.unit }} (you have none)
+                    {% endif %}
+
+                    {% if item.in_shopping_list %}
+                        <span>✓ Already on shopping list</span>
+                    {% else %}
+                        <span class="hover-add-btn">
+                            <form method="post" action="{% url 'shopping_list:add_from_recipe' %}" class="inline-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="ingredient_id" value="{{ item.ri.ingredient.id }}">
+                                <input type="hidden" name="quantity_needed" value="{{ item.missing_qty }}">
+                                <input type="hidden" name="recipe_id" value="{{ recipe.id }}">
+                                <button type="submit">Add to shopping list</button>
+                            </form>
+                        </span>
+                    {% endif %}
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
 
     <h2>Instructions</h2>
     <p>{{ recipe.instructions }}</p>

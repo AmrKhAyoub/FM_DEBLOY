@@ -1,0 +1,841 @@
+[
+    {
+        "model": "recipes.ingredient",
+        "pk": 1,
+        "fields": {
+            "title": "Chickpeas",
+            "category": "grains",
+            "unit": "g"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 2,
+        "fields": {
+            "title": "Tahini",
+            "category": "other",
+            "unit": "ml"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 3,
+        "fields": {
+            "title": "Garlic",
+            "category": "vegetables",
+            "unit": "pcs"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 4,
+        "fields": {
+            "title": "Lemon Juice",
+            "category": "fruits",
+            "unit": "ml"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 5,
+        "fields": {
+            "title": "Olive Oil",
+            "category": "other",
+            "unit": "ml"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 6,
+        "fields": {
+            "title": "Salt",
+            "category": "spices",
+            "unit": "tsp"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 7,
+        "fields": {
+            "title": "Chicken Breast",
+            "category": "meat",
+            "unit": "g"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 8,
+        "fields": {
+            "title": "Yogurt",
+            "category": "dairy",
+            "unit": "g"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 9,
+        "fields": {
+            "title": "Paprika",
+            "category": "spices",
+            "unit": "tsp"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 10,
+        "fields": {
+            "title": "Parsley",
+            "category": "vegetables",
+            "unit": "pcs"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 11,
+        "fields": {
+            "title": "Cumin",
+            "category": "spices",
+            "unit": "tsp"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 12,
+        "fields": {
+            "title": "Pita Bread",
+            "category": "grains",
+            "unit": "pcs"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 13,
+        "fields": {
+            "title": "Chicken Thighs",
+            "category": "meat",
+            "unit": "g"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 14,
+        "fields": {
+            "title": "Shawarma Spice",
+            "category": "spices",
+            "unit": "tsp"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 15,
+        "fields": {
+            "title": "Garlic Sauce",
+            "category": "other",
+            "unit": "ml"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 16,
+        "fields": {
+            "title": "Ground Beef",
+            "category": "meat",
+            "unit": "g"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 17,
+        "fields": {
+            "title": "Burger Bun",
+            "category": "grains",
+            "unit": "pcs"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 18,
+        "fields": {
+            "title": "Cheddar Cheese",
+            "category": "dairy",
+            "unit": "pcs"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 19,
+        "fields": {
+            "title": "Tomato",
+            "category": "vegetables",
+            "unit": "pcs"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 20,
+        "fields": {
+            "title": "Lettuce",
+            "category": "vegetables",
+            "unit": "pcs"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 21,
+        "fields": {
+            "title": "Kunafa Dough",
+            "category": "grains",
+            "unit": "g"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 22,
+        "fields": {
+            "title": "Mozzarella Cheese",
+            "category": "dairy",
+            "unit": "g"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 23,
+        "fields": {
+            "title": "Sugar Syrup",
+            "category": "other",
+            "unit": "ml"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 24,
+        "fields": {
+            "title": "Pistachio",
+            "category": "other",
+            "unit": "g"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 25,
+        "fields": {
+            "title": "Fava Beans",
+            "category": "grains",
+            "unit": "g"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 26,
+        "fields": {
+            "title": "Cucumber",
+            "category": "vegetables",
+            "unit": "pcs"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 27,
+        "fields": {
+            "title": "Pomegranate Molasses",
+            "category": "other",
+            "unit": "ml"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 28,
+        "fields": {
+            "title": "Red Lentils",
+            "category": "grains",
+            "unit": "g"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 29,
+        "fields": {
+            "title": "Onion",
+            "category": "vegetables",
+            "unit": "pcs"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 30,
+        "fields": {
+            "title": "Pizza Dough",
+            "category": "grains",
+            "unit": "g"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 31,
+        "fields": {
+            "title": "Tomato Sauce",
+            "category": "other",
+            "unit": "ml"
+        }
+    },
+    {
+        "model": "recipes.ingredient",
+        "pk": 32,
+        "fields": {
+            "title": "Basil",
+            "category": "vegetables",
+            "unit": "pcs"
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 1,
+        "fields": {
+            "title": "Classic Hummus",
+            "instructions": "Blend chickpeas, tahini, garlic, lemon juice, and olive oil until smooth. Serve with pita bread.",
+            "prep_time": 10,
+            "meal_type": "snack",
+            "category": "salads"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 1,
+        "fields": {
+            "recipe": 1,
+            "ingredient": 1,
+            "required_quantity": "400.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 2,
+        "fields": {
+            "recipe": 1,
+            "ingredient": 2,
+            "required_quantity": "50.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 3,
+        "fields": {
+            "recipe": 1,
+            "ingredient": 3,
+            "required_quantity": "2.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 4,
+        "fields": {
+            "recipe": 1,
+            "ingredient": 4,
+            "required_quantity": "30.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 5,
+        "fields": {
+            "recipe": 1,
+            "ingredient": 5,
+            "required_quantity": "40.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 6,
+        "fields": {
+            "recipe": 1,
+            "ingredient": 6,
+            "required_quantity": "1.00"
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 2,
+        "fields": {
+            "title": "Shish Tawook",
+            "instructions": "Marinate cubed chicken breast in yogurt, garlic, lemon juice, and paprika. Skewer and grill until fully cooked.",
+            "prep_time": 120,
+            "meal_type": "dinner",
+            "category": "grills"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 7,
+        "fields": {
+            "recipe": 2,
+            "ingredient": 7,
+            "required_quantity": "500.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 8,
+        "fields": {
+            "recipe": 2,
+            "ingredient": 8,
+            "required_quantity": "100.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 9,
+        "fields": {
+            "recipe": 2,
+            "ingredient": 3,
+            "required_quantity": "3.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 10,
+        "fields": {
+            "recipe": 2,
+            "ingredient": 4,
+            "required_quantity": "20.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 11,
+        "fields": {
+            "recipe": 2,
+            "ingredient": 9,
+            "required_quantity": "2.00"
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 3,
+        "fields": {
+            "title": "Chicken Shawarma Wrap",
+            "instructions": "Coat chicken thighs in shawarma spice and cook. Slice thinly, wrap in pita bread with garlic sauce.",
+            "prep_time": 35,
+            "meal_type": "lunch",
+            "category": "main_dish"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 12,
+        "fields": {
+            "recipe": 3,
+            "ingredient": 13,
+            "required_quantity": "400.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 13,
+        "fields": {
+            "recipe": 3,
+            "ingredient": 14,
+            "required_quantity": "3.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 14,
+        "fields": {
+            "recipe": 3,
+            "ingredient": 12,
+            "required_quantity": "2.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 15,
+        "fields": {
+            "recipe": 3,
+            "ingredient": 15,
+            "required_quantity": "50.00"
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 4,
+        "fields": {
+            "title": "Classic Beef Burger",
+            "instructions": "Form ground beef into patties, grill. Serve in a burger bun with cheddar cheese, lettuce, and tomato.",
+            "prep_time": 20,
+            "meal_type": "lunch",
+            "category": "main_dish"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 16,
+        "fields": {
+            "recipe": 4,
+            "ingredient": 16,
+            "required_quantity": "200.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 17,
+        "fields": {
+            "recipe": 4,
+            "ingredient": 17,
+            "required_quantity": "1.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 18,
+        "fields": {
+            "recipe": 4,
+            "ingredient": 18,
+            "required_quantity": "1.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 19,
+        "fields": {
+            "recipe": 4,
+            "ingredient": 19,
+            "required_quantity": "1.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 20,
+        "fields": {
+            "recipe": 4,
+            "ingredient": 20,
+            "required_quantity": "2.00"
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 5,
+        "fields": {
+            "title": "Cheese Kunafa",
+            "instructions": "Layer kunafa dough and mozzarella cheese. Bake until golden, pour sugar syrup over it, and garnish with pistachios.",
+            "prep_time": 45,
+            "meal_type": "snack",
+            "category": "dessert"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 21,
+        "fields": {
+            "recipe": 5,
+            "ingredient": 21,
+            "required_quantity": "250.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 22,
+        "fields": {
+            "recipe": 5,
+            "ingredient": 22,
+            "required_quantity": "300.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 23,
+        "fields": {
+            "recipe": 5,
+            "ingredient": 23,
+            "required_quantity": "150.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 24,
+        "fields": {
+            "recipe": 5,
+            "ingredient": 24,
+            "required_quantity": "50.00"
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 6,
+        "fields": {
+            "title": "Foul Mudammas",
+            "instructions": "Simmer fava beans, mash slightly, and mix with olive oil, cumin, and diced tomatoes.",
+            "prep_time": 15,
+            "meal_type": "breakfast",
+            "category": "main_dish"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 25,
+        "fields": {
+            "recipe": 6,
+            "ingredient": 25,
+            "required_quantity": "400.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 26,
+        "fields": {
+            "recipe": 6,
+            "ingredient": 5,
+            "required_quantity": "30.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 27,
+        "fields": {
+            "recipe": 6,
+            "ingredient": 11,
+            "required_quantity": "1.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 28,
+        "fields": {
+            "recipe": 6,
+            "ingredient": 19,
+            "required_quantity": "1.00"
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 7,
+        "fields": {
+            "title": "Fattoush Salad",
+            "instructions": "Chop cucumber, tomato, and lettuce. Mix with toasted pita bread and dress with pomegranate molasses and olive oil.",
+            "prep_time": 15,
+            "meal_type": "lunch",
+            "category": "salads"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 29,
+        "fields": {
+            "recipe": 7,
+            "ingredient": 26,
+            "required_quantity": "2.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 30,
+        "fields": {
+            "recipe": 7,
+            "ingredient": 19,
+            "required_quantity": "2.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 31,
+        "fields": {
+            "recipe": 7,
+            "ingredient": 20,
+            "required_quantity": "3.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 32,
+        "fields": {
+            "recipe": 7,
+            "ingredient": 12,
+            "required_quantity": "1.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 33,
+        "fields": {
+            "recipe": 7,
+            "ingredient": 27,
+            "required_quantity": "20.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 34,
+        "fields": {
+            "recipe": 7,
+            "ingredient": 5,
+            "required_quantity": "20.00"
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 8,
+        "fields": {
+            "title": "Middle Eastern Lentil Soup",
+            "instructions": "Saute onion, add red lentils, cumin, and water. Simmer until lentils are soft, then blend.",
+            "prep_time": 30,
+            "meal_type": "dinner",
+            "category": "soups"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 35,
+        "fields": {
+            "recipe": 8,
+            "ingredient": 28,
+            "required_quantity": "200.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 36,
+        "fields": {
+            "recipe": 8,
+            "ingredient": 29,
+            "required_quantity": "1.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 37,
+        "fields": {
+            "recipe": 8,
+            "ingredient": 11,
+            "required_quantity": "2.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 38,
+        "fields": {
+            "recipe": 8,
+            "ingredient": 5,
+            "required_quantity": "15.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 39,
+        "fields": {
+            "recipe": 8,
+            "ingredient": 6,
+            "required_quantity": "1.00"
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 9,
+        "fields": {
+            "title": "Margherita Pizza",
+            "instructions": "Spread tomato sauce on pizza dough, top with mozzarella cheese and basil, and bake at high heat.",
+            "prep_time": 25,
+            "meal_type": "dinner",
+            "category": "pastries"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 40,
+        "fields": {
+            "recipe": 9,
+            "ingredient": 30,
+            "required_quantity": "300.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 41,
+        "fields": {
+            "recipe": 9,
+            "ingredient": 31,
+            "required_quantity": "100.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 42,
+        "fields": {
+            "recipe": 9,
+            "ingredient": 22,
+            "required_quantity": "150.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 43,
+        "fields": {
+            "recipe": 9,
+            "ingredient": 32,
+            "required_quantity": "5.00"
+        }
+    },
+    {
+        "model": "recipes.recipe",
+        "pk": 10,
+        "fields": {
+            "title": "Falafel Wrap",
+            "instructions": "Blend chickpeas, parsley, and cumin. Form into balls and fry. Serve in pita bread.",
+            "prep_time": 40,
+            "meal_type": "lunch",
+            "category": "main_dish"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 44,
+        "fields": {
+            "recipe": 10,
+            "ingredient": 1,
+            "required_quantity": "250.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 45,
+        "fields": {
+            "recipe": 10,
+            "ingredient": 10,
+            "required_quantity": "10.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 46,
+        "fields": {
+            "recipe": 10,
+            "ingredient": 11,
+            "required_quantity": "2.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 47,
+        "fields": {
+            "recipe": 10,
+            "ingredient": 12,
+            "required_quantity": "2.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 48,
+        "fields": {
+            "recipe": 10,
+            "ingredient": 3,
+            "required_quantity": "2.00"
+        }
+    },
+    {
+        "model": "recipes.recipeingredient",
+        "pk": 49,
+        "fields": {
+            "recipe": 10,
+            "ingredient": 6,
+            "required_quantity": "1.00"
+        }
+    }
+]

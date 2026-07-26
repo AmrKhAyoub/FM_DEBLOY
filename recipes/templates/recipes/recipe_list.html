@@ -6,30 +6,32 @@
 <body>
     <h1>All Recipes</h1>
 
-    <form method="get" onsubmit="return false;">
+    <form method="get" action="{% url 'recipes:recipe_list' %}">
         <input type="text" name="q" id="search-box" placeholder="Search recipes..." value="{{ query|default:'' }}" oninput="liveSearch()">
-        <input type="text" name="cuisine" id="cuisine-box" placeholder="Cuisine (e.g. Italian)" value="{{ cuisine|default:'' }}" oninput="liveSearch()">
+
+        <select name="category" id="category-box" onchange="liveSearch()">
+            <option value="">All categories</option>
+            <option value="dessert" {% if category == "dessert" %}selected{% endif %}>Dessert</option>
+            <option value="pastries" {% if category == "pastries" %}selected{% endif %}>Pastries</option>
+            <option value="grills" {% if category == "grills" %}selected{% endif %}>Grills</option>
+            <option value="soups" {% if category == "soups" %}selected{% endif %}>Soups</option>
+            <option value="salads" {% if category == "salads" %}selected{% endif %}>Salads</option>
+            <option value="main_dish" {% if category == "main_dish" %}selected{% endif %}>Main Dish</option>
+        </select>
 
         <select name="meal_type" id="meal-type-box" onchange="liveSearch()">
             <option value="">All meal types</option>
             <option value="breakfast" {% if meal_type == "breakfast" %}selected{% endif %}>Breakfast</option>
             <option value="lunch" {% if meal_type == "lunch" %}selected{% endif %}>Lunch</option>
             <option value="dinner" {% if meal_type == "dinner" %}selected{% endif %}>Dinner</option>
+            <option value="snack" {% if meal_type == "snack" %}selected{% endif %}>Snack</option>
         </select>
 
-        <button type="submit" formaction="{% url 'recipe_list' %}" formmethod="get" onclick="this.form.onsubmit=null; this.form.submit();">Search</button>
+        <button type="submit">Search</button>
     </form>
 
     <div id="search-results">
-        {% if recipes %}
-            <ul>
-                {% for recipe in recipes %}
-                    <li><a href="{% url 'recipe_detail' recipe.id %}">{{ recipe.name }}</a> — {{ recipe.meal_type }}</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No recipes found yet.</p>
-        {% endif %}
+        {% include 'recipes/_recipe_results.html' %}
     </div>
 
     <script>
@@ -39,12 +41,12 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 const query = document.getElementById('search-box').value;
-                const cuisine = document.getElementById('cuisine-box').value;
+                const category = document.getElementById('category-box').value;
                 const mealType = document.getElementById('meal-type-box').value;
 
-                const params = new URLSearchParams({ q: query, cuisine: cuisine, meal_type: mealType });
+                const params = new URLSearchParams({ q: query, category: category, meal_type: mealType });
 
-                fetch('/recipes/live-search/?' + params.toString())
+                fetch("{% url 'recipes:live_search' %}?" + params.toString())
                     .then(response => response.text())
                     .then(html => {
                         document.getElementById('search-results').innerHTML = html;

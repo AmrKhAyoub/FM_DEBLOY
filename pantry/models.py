@@ -1,11 +1,28 @@
+from django.conf import settings
+from django.core.validators import MinValueValidator
 from django.db import models
-from django.contrib.auth.models import User
 
-class Ingredient(models.Model):
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-    quantity = models.CharField(max_length=50, blank=True)
+from recipes.models import Ingredient
+
+
+class PantryItem(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="pantry_items"
+    )
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    # Added MinValueValidator to prevent negative or zero quantities in the database
+    quantity = models.DecimalField(
+        max_digits=8, 
+        decimal_places=2, 
+        validators=[MinValueValidator(0.01, message="Quantity must be greater than zero.")]
+    )
     expiration_date = models.DateField(null=True, blank=True)
 
+    class Meta:
+        # modernized unique_together to UniqueConstraint
+        constraints = [
+            models.UniqueConstraint(fields=["user", "ingredient"], name="unique_user_pantry_ingredient")
+        ]
+
     def __str__(self):
-        return self.name
+        return f"{self.user.username}'s {self.ingredient.title} ({self.quantity} {self.ingredient.unit})"

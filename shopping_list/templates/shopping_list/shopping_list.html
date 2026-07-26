@@ -1,58 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
+    <meta charset="UTF-8">
     <title>Shopping List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
-    {% csrf_token %}
+    <div class="container mt-4">
 
-    {% if messages %}
-        <ul>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+        {% if messages %} {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %} {% endif %}
 
-    <h1>My Shopping List</h1>
+        <h2>My Shopping List</h2>
 
-    <form method="post" action="{% url 'add_item' %}">
-        {% csrf_token %}
-        <input type="text" name="item_name" placeholder="Item name" required>
-        <input type="text" name="quantity" placeholder="Quantity (optional)">
-        <button type="submit">Add Item</button>
-    </form>
+        <form method="post" action="{% url 'shopping_list:add_item' %}" class="row g-2 mb-4">
+            {% csrf_token %}
+            <div class="col-md-5">{{ form.ingredient }}</div>
+            <div class="col-md-4">{{ form.quantity_needed }}</div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">Add Item</button>
+            </div>
+        </form>
 
-    {% if items %}
-        <ul>
+        {% if items %}
+        <ul class="list-group" id="shopping-list">
             {% for item in items %}
-                <li id="item-{{ item.id }}">
-                    {% if item.purchased %}
-                        <s>{{ item.item_name }}</s>
-                    {% else %}
-                        {{ item.item_name }}
-                    {% endif %}
-                    —
-                    <span class="quantity-view" id="quantity-view-{{ item.id }}">{{ item.quantity }}</span>
+            <li class="list-group-item d-flex justify-content-between align-items-center" id="item-{{ item.id }}">
+                <span>
+                {% if item.is_purchased %}<s>{{ item.ingredient.title }}</s>{% else %}{{ item.ingredient.title }}{% endif %}
+                -
+                <span class="quantity-view" id="quantity-view-{{ item.id }}">{{ item.quantity_needed|floatformat:"-2" }}</span>
+                <span class="text-muted">{{ item.ingredient.unit }}</span>
+                <span class="quantity-edit" id="quantity-edit-{{ item.id }}" style="display:none;">
+                    <input type="text" id="quantity-input-{{ item.id }}" value="{{ item.quantity_needed }}" size="8">
+                    <button class="btn btn-sm btn-success" onclick="saveQuantity({{ item.id }})">Save</button>
+                    <button class="btn btn-sm btn-secondary" onclick="cancelEdit({{ item.id }})">Cancel</button>
+                </span>
+                </span>
+                <span class="d-flex gap-1 align-items-center">
+                   <button class="btn btn-sm btn-outline-secondary edit-btn-{{ item.id }}" onclick="startEdit({{ item.id }})">Edit</button>
+    
+                   <form method="post" action="{% url 'shopping_list:toggle_purchased' item.id %}" class="d-inline">
+                       {% csrf_token %}
+                       <button type="submit" class="btn btn-sm btn-outline-success">
+                         {% if item.is_purchased %}Mark as not bought{% else %}Mark as bought{% endif %}
+                       </button>
+                   </form>
 
-                    <span class="quantity-edit" id="quantity-edit-{{ item.id }}" style="display:none;">
-                        <input type="text" id="quantity-input-{{ item.id }}" value="{{ item.quantity }}" size="10">
-                        <button onclick="saveQuantity({{ item.id }})">Save</button>
-                        <button onclick="cancelEdit({{ item.id }})">Cancel</button>
-                    </span>
-
-                    <button onclick="startEdit({{ item.id }})" class="edit-btn-{{ item.id }}">Edit</button>
-
-                    <a href="{% url 'toggle_purchased' item.id %}">
-                        {% if item.purchased %}Mark as not bought{% else %}Mark as bought{% endif %}
-                    </a>
-                    <a href="{% url 'delete_item' item.id %}">Delete</a>
-                </li>
+                   <form method="post" action="{% url 'shopping_list:delete_item' item.id %}" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                   </form>
+               </span>
+            </li>
             {% endfor %}
         </ul>
-    {% else %}
+        {% else %}
         <p>Your shopping list is empty.</p>
-    {% endif %}
+        {% endif %}
+
+        <form id="csrf-form">{% csrf_token %}</form>
+
+    </div>
 
     <script>
         function startEdit(itemId) {
@@ -69,25 +81,27 @@
 
         function saveQuantity(itemId) {
             const newQuantity = document.getElementById('quantity-input-' + itemId).value;
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
+            const csrfToken = document.querySelector('#csrf-form [name=csrfmiddlewaretoken]').value;
             fetch('/shopping-list/edit/' + itemId + '/', {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': csrfToken,
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'quantity=' + encodeURIComponent(newQuantity),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('quantity-view-' + itemId).textContent = data.quantity;
-                    cancelEdit(itemId);
-                }
-            });
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'quantity_needed=' + encodeURIComponent(newQuantity),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('quantity-view-' + itemId).textContent = data.quantity_needed;
+                        cancelEdit(itemId);
+                    } else {
+                        alert('Could not update: ' + JSON.stringify(data.errors));
+                    }
+                });
         }
     </script>
 </body>
+
 </html>
