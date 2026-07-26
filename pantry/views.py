@@ -109,7 +109,6 @@ def pantry_update_view(request, pk):
 
 
 @login_required
-#add @require_http_methods to restrict the view to GET and POST requests
 @require_http_methods(["GET", "POST"])
 def pantry_delete_view(request, pk):
     item = get_object_or_404(PantryItem, pk=pk, user=request.user)
