@@ -1,0 +1,11 @@
+<h2>Delete Pantry Item</h2>
+
+<p>Are you sure you want to delete "{{ object.ingredient.title }}" from your pantry?</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Confirm Delete</button>
+</form>
+
+<br>
+<a href="{% url 'pantry:list' %}">Cancel</a>

@@ -4,7 +4,7 @@
     <title>Recommended for You</title>
 </head>
 <body>
-    <a href="{% url 'recipe_list' %}">&larr; Back to all recipes</a>
+    <a href="{% url 'recipes:recipe_list' %}">&larr; Back to all recipes</a>
 
     <h1>Recommended for You</h1>
 
@@ -12,7 +12,7 @@
         <ul>
             {% for item in scored_recipes %}
                 <li>
-                    <a href="{% url 'recipe_detail' item.recipe.id %}">{{ item.recipe.name }}</a>
+                    <a href="{% url 'recipes:recipe_detail' item.recipe.id %}">{{ item.recipe.title }}</a>
                     — {{ item.matched }}/{{ item.total }} ingredients you have
                 </li>
             {% endfor %}

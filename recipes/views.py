@@ -1,77 +1,114 @@
-from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import Recipe
-from pantry.models import Ingredient
+from django.shortcuts import get_object_or_404, render
+from django.views.decorators.http import require_GET
+
+from pantry.models import PantryItem
 from shopping_list.models import ShoppingListItem
+from .forms import RecipeSearchFilterForm
+from .models import Recipe
 
-def recipe_list(request):
-    query = request.GET.get('q')
-    meal_type = request.GET.get('meal_type')
-    cuisine = request.GET.get('cuisine')
 
+def get_pantry_quantities(user):
+    """Returns a dictionary mapping ingredient_id -> quantity for a given user."""
+    pantry_items = PantryItem.objects.filter(user=user)
+    return {item.ingredient_id: item.quantity for item in pantry_items}
+
+
+def _filter_recipes(request):
+    """Helper function to validate filter GET params using RecipeSearchFilterForm."""
+    form = RecipeSearchFilterForm(request.GET)
     recipes = Recipe.objects.all()
 
-    if query:
-        recipes = recipes.filter(name__icontains=query)
+    if form.is_valid():
+        search_query = form.cleaned_data.get('search_query')
+        meal_type = form.cleaned_data.get('meal_type')
+        category = form.cleaned_data.get('category')
 
-    if meal_type:
-        recipes = recipes.filter(meal_type=meal_type)
+        if search_query:
+            recipes = recipes.filter(title__icontains=search_query)
+        if meal_type:
+            recipes = recipes.filter(meal_type=meal_type)
+        if category:
+            recipes = recipes.filter(category=category)
 
-    if cuisine:
-        recipes = recipes.filter(cuisine__icontains=cuisine)
+    # adding explicit order_by to ensure consistent ordering of recipes
+    return recipes.order_by('title'), form
 
-    return render(request, 'recipes/recipe_list.html', {
-        'recipes': recipes,
-        'query': query,
-        'meal_type': meal_type,
-        'cuisine': cuisine,
-    })
+
+@require_GET
+def recipe_list(request):
+    recipes, form = _filter_recipes(request)
+
+    return render(
+        request,
+        'recipes/recipe_list.html',
+        {
+            'recipes': recipes[:20],
+            'form': form,
+        },
+    )
 
 
 @login_required
+@require_GET
 def recipe_detail(request, recipe_id):
-    recipe = get_object_or_404(Recipe, id=recipe_id)
+    recipe = get_object_or_404(
+        Recipe.objects.prefetch_related('recipeingredient_set__ingredient'),
+        id=recipe_id,
+    )
 
-    pantry_items = Ingredient.objects.filter(owner=request.user)
-    pantry_names = set(item.name.lower().strip() for item in pantry_items)
+    pantry_quantities = get_pantry_quantities(request.user)
 
-    shopping_items = ShoppingListItem.objects.filter(owner=request.user)
-    shopping_names = set(item.item_name.lower().strip() for item in shopping_items)
+    shopping_ingredient_ids = set(
+        ShoppingListItem.objects.filter(user=request.user).values_list('ingredient_id', flat=True)
+    )
 
     ingredients_with_status = []
-    for ri in recipe.ingredients.all():
-        has_it = ri.ingredient_name.lower().strip() in pantry_names
-        in_shopping_list = ri.ingredient_name.lower().strip() in shopping_names
+    for ri in recipe.recipeingredient_set.all():
+        available_qty = pantry_quantities.get(ri.ingredient.id, 0)
+        has_enough = available_qty >= ri.required_quantity
+        missing_qty = max(ri.required_quantity - available_qty, 0)
+        in_shopping_list = ri.ingredient.id in shopping_ingredient_ids
+
         ingredients_with_status.append({
-            'ingredient': ri,
-            'has_it': has_it,
+            'ri': ri,
+            'has_enough': has_enough,
+            'available_qty': available_qty,
+            'missing_qty': missing_qty,
             'in_shopping_list': in_shopping_list,
         })
 
-    return render(request, 'recipes/recipe_detail.html', {
-        'recipe': recipe,
-        'ingredients_with_status': ingredients_with_status,
-    })
+    all_missing_added = all(
+        item['has_enough'] or item['in_shopping_list']
+        for item in ingredients_with_status
+    )
 
+    return render(
+        request,
+        'recipes/recipe_detail.html',
+        {
+            'recipe': recipe,
+            'ingredients_with_status': ingredients_with_status,
+            'all_missing_added': all_missing_added,
+        },
+    )
 
 
 @login_required
+@require_GET
 def recommended_recipes(request):
-    # Get all ingredient names the user has, lowercased for comparison
-    pantry_items = Ingredient.objects.filter(owner=request.user)
-    pantry_names = set(item.name.lower().strip() for item in pantry_items)
+    pantry_ingredient_ids = set(
+        PantryItem.objects.filter(user=request.user).values_list('ingredient_id', flat=True)
+    )
 
-    all_recipes = Recipe.objects.all()
+    all_recipes = Recipe.objects.prefetch_related('recipeingredient_set__ingredient')
     scored_recipes = []
 
     for recipe in all_recipes:
-        recipe_ingredients = recipe.ingredients.all()
-        total_needed = recipe_ingredients.count()
-        matched = 0
+        recipe_ingredients = recipe.recipeingredient_set.all()
 
-        for ri in recipe_ingredients:
-            if ri.ingredient_name.lower().strip() in pantry_names:
-                matched += 1
+        total_needed = len(recipe_ingredients)
+        matched = sum(1 for ri in recipe_ingredients if ri.ingredient.id in pantry_ingredient_ids)
 
         scored_recipes.append({
             'recipe': recipe,
@@ -79,24 +116,13 @@ def recommended_recipes(request):
             'total': total_needed,
         })
 
-    # Sort by matched count, highest first
     scored_recipes.sort(key=lambda x: x['matched'], reverse=True)
 
     return render(request, 'recipes/recommended.html', {'scored_recipes': scored_recipes})
 
+
+@require_GET
 def live_search(request):
-    query = request.GET.get('q', '')
-    meal_type = request.GET.get('meal_type', '')
-    cuisine = request.GET.get('cuisine', '')
+    recipes, _ = _filter_recipes(request)
 
-    recipes = Recipe.objects.all()
-
-    if query:
-        recipes = recipes.filter(name__icontains=query)
-    if meal_type:
-        recipes = recipes.filter(meal_type=meal_type)
-    if cuisine:
-        recipes = recipes.filter(cuisine__icontains=cuisine)
-
-    return render(request, 'recipes/_recipe_results.html', {'recipes': recipes})   #just the results list, not a full HTML page 
-    
+    return render(request, 'recipes/_recipe_results.html', {'recipes': recipes[:20]})

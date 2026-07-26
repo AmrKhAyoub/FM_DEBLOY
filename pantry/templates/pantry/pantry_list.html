@@ -1,0 +1,18 @@
+<h2>My Pantry</h2>
+
+<a href="{% url 'pantry:add' %}">Add New Item</a>
+
+<ul>
+    {% for item in pantry_items %}
+        <li>
+            {{ item.ingredient.title }} - {{ item.quantity }} {{ item.ingredient.unit }}
+            {% if item.expiration_date %}
+                (Expires: {{ item.expiration_date }})
+            {% endif %}
+            | <a href="{% url 'pantry:update' item.pk %}">Edit</a>
+            | <a href="{% url 'pantry:delete' item.pk %}">Delete</a>
+        </li>
+    {% empty %}
+        <li>No pantry items found.</li>
+    {% endfor %}
+</ul>

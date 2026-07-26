@@ -1,82 +1,187 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from decimal import Decimal, InvalidOperation
+
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods
+
+from pantry.models import PantryItem
+from recipes.models import Recipe
+from .forms import ShoppingListItemForm, ShoppingListQuantityForm
 from .models import ShoppingListItem
 
 
-@login_required #restricting personal data views to logged-in users only
+def _notify_item_saved(request, item, created):
+    """Sends a standardized success message for added or updated items."""
+    if created:
+        messages.success(request, f'"{item.ingredient.title}" added to your shopping list!')
+    else:
+        messages.success(
+            request,
+            f'Updated "{item.ingredient.title}" — now {item.quantity_needed} {item.ingredient.unit}.',
+        )
+
+
+@login_required
+@require_http_methods(["GET"])
 def shopping_list(request):
-    items = ShoppingListItem.objects.filter(owner=request.user)
-    return render(request, 'shopping_list/shopping_list.html', {'items': items})
+    items = ShoppingListItem.objects.filter(user=request.user).select_related('ingredient')
+    return render(
+        request,
+        'shopping_list/shopping_list.html',
+        {'items': items, 'form': ShoppingListItemForm()}
+    )
 
 
 @login_required
+@require_POST
 def add_item(request):
-    if request.method == 'POST':
-        item_name = request.POST.get('item_name')
-        quantity = request.POST.get('quantity')
+    """
+    Handles both ways of adding items to the shopping list.
 
-        if item_name:
-            ShoppingListItem.objects.create(
-                owner=request.user,
-                item_name=item_name,
-                quantity=quantity,
-            )
-            messages.success(request, f'"{item_name}" added to your shopping list!')
+    The same view is used for:
+    1. Manual addition from the shopping list page.
+    2. Adding ingredients from a recipe page.
+    """
+    form = ShoppingListItemForm(request.POST)
 
-    return redirect('shopping_list')
+    if form.is_valid():
+        ingredient = form.cleaned_data["ingredient"]
+        quantity_needed = form.cleaned_data["quantity_needed"]
 
-from django.http import JsonResponse
+        item, created = ShoppingListItem.objects.get_or_create(
+            user=request.user,
+            ingredient=ingredient,
+            defaults={"quantity_needed": quantity_needed},
+        )
+
+        if not created:
+            item.quantity_needed += quantity_needed
+            item.full_clean()
+            item.save()
+
+        _notify_item_saved(request, item, created)
+
+    else:
+        messages.error(request, "Please fix the errors below.")
+
+    recipe_id = request.POST.get("recipe_id")
+    if recipe_id:
+        return redirect("recipes:recipe_detail", recipe_id=recipe_id)
+
+    return redirect("shopping_list:shopping_list")
+
 
 @login_required
+@require_POST
 def edit_item(request, item_id):
-    item = get_object_or_404(ShoppingListItem, id=item_id, owner=request.user)
-    if request.method == 'POST':
-        item.quantity = request.POST.get('quantity')
-        item.save()
+    item = get_object_or_404(ShoppingListItem, id=item_id, user=request.user)
+
+    form = ShoppingListQuantityForm(request.POST, instance=item)
+
+    if form.is_valid():
+        form.save()
 
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'success': True, 'quantity': item.quantity})
+            return JsonResponse({
+                'success': True,
+                'quantity_needed': f'{item.quantity_needed:g}'
+            })
 
-        messages.success(request, f'Updated "{item.item_name}".')
+        messages.success(request, f'Updated "{item.ingredient.title}".')
 
-    return redirect('shopping_list')
+    elif request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse(
+            {'success': False, 'errors': form.errors},
+            status=400
+        )
+
+    return redirect('shopping_list:shopping_list')
+
 
 @login_required
+@require_http_methods(["DELETE", "POST"])
 def delete_item(request, item_id):
-    item = get_object_or_404(ShoppingListItem, id=item_id, owner=request.user)
+    item = get_object_or_404(
+        ShoppingListItem,
+        id=item_id,
+        user=request.user
+    )
+
     item.delete()
-    return redirect('shopping_list')
+    messages.info(request, 'Item removed from your shopping list.')
+
+    return redirect('shopping_list:shopping_list')
 
 
 @login_required
+@require_POST
 def toggle_purchased(request, item_id):
-    item = get_object_or_404(ShoppingListItem, id=item_id, owner=request.user)
-    item.purchased = not item.purchased
-    item.save()
-    return redirect('shopping_list')
+    item = get_object_or_404(
+        ShoppingListItem,
+        id=item_id,
+        user=request.user
+    )
 
-from django.contrib import messages
+    item.is_purchased = not item.is_purchased
+    item.save()
+
+    if item.is_purchased:
+        pantry_item, created = PantryItem.objects.get_or_create(
+            user=request.user,
+            ingredient=item.ingredient,
+            defaults={'quantity': item.quantity_needed},
+        )
+
+        if not created:
+            pantry_item.quantity += item.quantity_needed
+            pantry_item.save()
+
+    return redirect('shopping_list:shopping_list')
+
 
 @login_required
-def add_from_recipe(request):
-    if request.method == 'POST':
-        item_name = request.POST.get('item_name')
-        quantity = request.POST.get('quantity', '')
+@require_POST
+def add_all_missing(request, recipe_id):
+    recipe = get_object_or_404(
+        Recipe.objects.prefetch_related('recipeingredient_set__ingredient'),
+        id=recipe_id,
+    )
 
-        already_exists = ShoppingListItem.objects.filter(
-            owner=request.user,
-            item_name__iexact=item_name
-        ).exists()
+    pantry = {
+        item.ingredient_id: item.quantity
+        for item in PantryItem.objects.filter(user=request.user)
+    }
 
-        if item_name and not already_exists:
-            ShoppingListItem.objects.create(
-                owner=request.user,
-                item_name=item_name,
-                quantity=quantity,
-            )
+    existing_ids = set(
+        ShoppingListItem.objects.filter(user=request.user)
+        .values_list('ingredient_id', flat=True)
+    )
 
-    recipe_id = request.POST.get('recipe_id')
-    return redirect('recipe_detail', recipe_id=recipe_id)
+    items_to_create = [
+        ShoppingListItem(
+            user=request.user,
+            ingredient=ri.ingredient,
+            quantity_needed=ri.required_quantity - pantry.get(ri.ingredient_id, 0),
+        )
+        for ri in recipe.recipeingredient_set.all()
+        if (ri.required_quantity - pantry.get(ri.ingredient_id, 0)) > 0
+        and ri.ingredient_id not in existing_ids
+    ]
 
+    if items_to_create:
+        ShoppingListItem.objects.bulk_create(items_to_create)
+        messages.success(
+            request,
+            f'{len(items_to_create)} missing ingredient(s) added to your shopping list!'
+        )
+    else:
+        messages.info(
+            request,
+            "Nothing to add — you already have everything or it's all on your list."
+        )
 
+    return redirect('recipes:recipe_detail', recipe_id=recipe_id)

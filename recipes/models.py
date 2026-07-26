@@ -1,25 +1,93 @@
 from django.db import models
 
-class Recipe(models.Model):
-    MEAL_TYPE_CHOICES = [
-        ('breakfast', 'Breakfast'),  #avoiding uppercase ,lowecase bug
-        ('lunch', 'Lunch'),
-        ('dinner', 'Dinner'),
-    ]
 
-    name = models.CharField(max_length=150)
-    instructions = models.TextField()
-    meal_type = models.CharField(max_length=50, choices=MEAL_TYPE_CHOICES, blank=True)
-    cuisine = models.CharField(max_length=50, blank=True)
+class Ingredient(models.Model):
+    class CategoryChoices(models.TextChoices):
+        VEGETABLES = "vegetables", "Vegetables"
+        FRUITS = "fruits", "Fruits"
+        MEAT = "meat", "Meat"
+        DAIRY = "dairy", "Dairy"
+        SPICES = "spices", "Spices"
+        GRAINS = "grains", "Grains"
+        OTHER = "other", "Other"
+
+    class QuantityUnitChoices(models.TextChoices):
+        GRAM = "g", "Grams"
+        KILOGRAM = "kg", "Kilograms"
+        MILLILITER = "ml", "Milliliters"
+        LITER = "l", "Liters"
+        TEASPOON = "tsp", "Teaspoon"
+        PIECE = "pcs", "Pieces"
+        OTHER = "other", "Other"
+
+    title = models.CharField(max_length=100, unique=True)
+    category = models.CharField(
+        max_length=50,
+        choices=CategoryChoices.choices,
+        default=CategoryChoices.OTHER,
+    )
+    unit = models.CharField(
+        max_length=50,
+        choices=QuantityUnitChoices.choices,
+        default=QuantityUnitChoices.OTHER,
+    )
 
     def __str__(self):
-        return self.name
+        return self.title
+
+
+class Recipe(models.Model):
+    class MealTypeChoices(models.TextChoices):
+        BREAKFAST = "breakfast", "Breakfast"
+        LUNCH = "lunch", "Lunch"
+        DINNER = "dinner", "Dinner"
+        SNACK = "snack", "Snack"
+
+    class RecipeCategoryChoices(models.TextChoices):
+        DESSERT = "dessert", "Dessert"
+        PASTRIES = "pastries", "Pastries"
+        GRILLS = "grills", "Grills"
+        SOUPS = "soups", "Soups"
+        SALADS = "salads", "Salads"
+        MAIN_DISH = "main_dish", "Main Dish"
+
+    title = models.CharField(max_length=200, unique=True)
+    # fixed typo in help text 'prepration' -> 'preparation'
+    instructions = models.TextField(
+        help_text="instructions of preparation", null=True, blank=True
+    )
+    prep_time = models.PositiveIntegerField(null=True, blank=True)
+
+    meal_type = models.CharField(
+        max_length=50,
+        choices=MealTypeChoices.choices,
+        null=True,
+        blank=True,
+    )
+
+    category = models.CharField(
+        max_length=50,
+        choices=RecipeCategoryChoices.choices,
+        null=True,
+        blank=True,
+    )
+
+    ingredients = models.ManyToManyField(Ingredient, through="RecipeIngredient")
+
+    def __str__(self):
+        return self.title
 
 
 class RecipeIngredient(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='ingredients')
-    ingredient_name = models.CharField(max_length=100)
-    quantity = models.CharField(max_length=50, blank=True)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    required_quantity = models.DecimalField(max_digits=8, decimal_places=2)
+
+    class Meta:
+        # make the combination of recipe and ingredient unique to prevent duplicates
+        constraints = [
+            models.UniqueConstraint(fields=["recipe", "ingredient"], name="unique_recipe_ingredient")
+        ]
 
     def __str__(self):
-        return f"{self.ingredient_name} for {self.recipe.name}"
+        return f"{self.required_quantity} {self.ingredient.unit} of {self.ingredient.title} for {self.recipe.title}"
