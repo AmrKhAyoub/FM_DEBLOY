@@ -1,0 +1,31 @@
+{% comment %}
+    Renders every field of a form with its label, help text and errors.
+    Used by the account pages so they all look the same and we do not repeat
+    the same markup in six templates.
+{% endcomment %}
+
+{% if form.non_field_errors %}
+    <div class="alert alert-danger py-2">
+        {% for error in form.non_field_errors %}
+            <div class="small">{{ error }}</div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% for field in form %}
+    <div class="mb-3">
+        <label for="{{ field.id_for_label }}" class="form-label small text-muted mb-1">
+            {{ field.label }}
+        </label>
+
+        {{ field }}
+
+        {% if field.help_text %}
+            <div class="form-text small">{{ field.help_text }}</div>
+        {% endif %}
+
+        {% for error in field.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+        {% endfor %}
+    </div>
+{% endfor %}

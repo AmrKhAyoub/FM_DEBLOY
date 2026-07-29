@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <!-- Tomato Body Gradient -->
+    <radialGradient id="tomatoGrad" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FF5252" />
+      <stop offset="70%" stop-color="#E53935" />
+      <stop offset="100%" stop-color="#C62828" />
+    </radialGradient>
+
+    <!-- Darker Leaf Green Gradient -->
+    <linearGradient id="leafGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2E7D32" />
+      <stop offset="100%" stop-color="#0D3B11" />
+    </linearGradient>
+  </defs>
+
+  <!-- Drop Shadow under tomato -->
+  <ellipse cx="100" cy="182" rx="55" ry="9" fill="#1A252C" opacity="0.12" />
+
+  <!-- Tomato Body -->
+  <circle cx="100" cy="112" r="62" fill="url(#tomatoGrad)" />
+
+  <!-- Soft Highlight Gloss -->
+  <ellipse cx="75" cy="72" rx="15" ry="7" fill="#FFFFFF" opacity="0.3" transform="rotate(-30 75 72)" />
+
+  <!-- Darker Stem & Leaves -->
+  <path d="M 100,54 Q 102,30 112,22 C 114,20 110,18 107,21 Q 97,32 95,54 Z" fill="#0D3B11" />
+  
+  <g fill="url(#leafGrad)">
+    <!-- Top-Left Leaf -->
+    <path d="M 100,54 Q 75,38 60,46 Q 78,56 100,54 Z" />
+    <!-- Top-Right Leaf -->
+    <path d="M 100,54 Q 125,38 140,46 Q 122,56 100,54 Z" />
+    <!-- Center-Left Leaf -->
+    <path d="M 100,54 Q 70,60 55,68 Q 75,70 100,54 Z" />
+    <!-- Center-Right Leaf -->
+    <path d="M 100,54 Q 130,60 145,68 Q 125,70 100,54 Z" />
+    <!-- Down Center Leaf -->
+    <path d="M 100,54 Q 96,72 100,76 Q 104,72 100,54 Z" />
+  </g>
+
+  <!-- Blush Cheeks -->
+  <circle cx="56" cy="122" r="8" fill="#FF80AB" opacity="0.4" />
+  <circle cx="144" cy="122" r="8" fill="#FF80AB" opacity="0.4" />
+
+  <!-- Glasses & Eyes (Reference Style) -->
+  <!-- Left Lens (Cream fill + Thick Dark Rim) -->
+  <circle cx="73" cy="108" r="23" fill="#FBF5EB" stroke="#222222" stroke-width="5.5" />
+  <!-- Right Lens (Cream fill + Thick Dark Rim) -->
+  <circle cx="127" cy="108" r="23" fill="#FBF5EB" stroke="#222222" stroke-width="5.5" />
+
+  <!-- Glasses Bridge & Arms -->
+  <path d="M 96,108 L 104,108" stroke="#222222" stroke-width="5.5" stroke-linecap="round" />
+  <path d="M 50,108 L 36,97" stroke="#222222" stroke-width="5" stroke-linecap="round" />
+  <path d="M 150,108 L 164,97" stroke="#222222" stroke-width="5" stroke-linecap="round" />
+
+  <!-- Solid Bold Pupils -->
+  <circle cx="73" cy="108" r="6" fill="#222222" />
+  <circle cx="127" cy="108" r="6" fill="#222222" />
+
+  <!-- Smile -->
+  <path d="M 89,142 Q 100,152 111,142" fill="none" stroke="#222222" stroke-width="4" stroke-linecap="round" />
+</svg>

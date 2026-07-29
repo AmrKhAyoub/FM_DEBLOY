@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}My Favorites{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-heart-fill"></i> My Favorite Recipes</h1>
+        <p class="subtitle">The recipes you saved while browsing.</p>
+    </div>
+
+    {% if favorites %}
+        <form method="post" action="{% url 'recipes:clear_favorites' %}"
+              onsubmit="return confirm('Remove all favorites?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger">Clear all</button>
+        </form>
+    {% endif %}
+</div>
+
+{% if favorites %}
+    {% for favorite in favorites %}
+        <div class="item-row item-row--have">
+            <div>
+                <a href="{% url 'recipes:recipe_detail' favorite.recipe.id %}"
+                   class="item-row__name text-decoration-none">
+                    <i class="bi {{ favorite.recipe.icon }}"></i> {{ favorite.recipe.title }}
+                </a>
+                {% if favorite.recipe.meal_type %}
+                    <div><small class="text-muted">{{ favorite.recipe.get_meal_type_display }}</small></div>
+                {% endif %}
+            </div>
+
+            <form method="post" action="{% url 'recipes:remove_favorite' favorite.recipe.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+            </form>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <span class="empty-state__icon"><i class="bi bi-heart"></i></span>
+        <p>You haven't saved any favorites yet.</p>
+        <a href="{% url 'recipes:recipe_list' %}" class="btn btn-primary mt-2">Browse recipes</a>
+    </div>
+{% endif %}
+
+{% endblock %}

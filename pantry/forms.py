@@ -7,8 +7,17 @@ class PantryItemForm(forms.ModelForm):
     class Meta:
         model = PantryItem
         fields = ["ingredient", "quantity", "expiration_date"]
+        # the CSS classes are Bootstrap's, so the inputs match the rest of the site
         widgets = {
-            "expiration_date": forms.DateInput(attrs={"type": "date"}),
+            "ingredient": forms.Select(
+                attrs={"class": "form-select"}
+            ),
+            "quantity": forms.NumberInput(
+                attrs={"class": "form-control", "step": "0.01", "min": "0.01"}
+            ),
+            "expiration_date": forms.DateInput(
+                attrs={"class": "form-control", "type": "date"}
+            ),
         }
 
     def clean_quantity(self):

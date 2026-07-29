@@ -1,99 +1,173 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ recipe.title }}</title>
-    <style>
-        .hover-add-btn {
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        li:hover .hover-add-btn {
-            opacity: 1;
-        }
-        .inline-form {
-            display: inline;
-        }
+{% extends 'base.html' %}
+{% block title %}{{ recipe.title }}{% endblock %}
 
-        /* Button styles */
-        .btn-add-all {
-            background-color: #007bff;
-            color: #ffffff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .btn-add-all:hover {
-            background-color: #0056b3;
-        }
-        .btn-added {
-            background-color: #28a745;
-            color: #ffffff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: not-allowed;
-            font-weight: bold;
-            opacity: 0.9;
-        }
-    </style>
-</head>
-<body>
-    <a href="{% url 'recipes:recipe_list' %}">&larr; Back to all recipes</a>
-    <p><a href="{% url 'shopping_list:shopping_list' %}">View my shopping list</a></p>
+{% block content %}
 
-    <h1>{{ recipe.title }}</h1>
-    <p><strong>Meal type:</strong> {{ recipe.meal_type }}</p>
-    <p><strong>Category:</strong> {{ recipe.category }}</p>
-    <p><strong>Prep time:</strong> {{ recipe.prep_time }} minutes</p>
+<a href="{% url 'recipes:recipe_list' %}" class="text-muted text-decoration-none">&larr; Back to all recipes</a>
 
-    <h2>Ingredients</h2>
+<div class="page-header mt-2">
+    <div>
+        <h1><i class="bi {{ recipe.icon }}"></i> {{ recipe.title }}</h1>
+        <div class="d-flex flex-wrap gap-1 mt-2">
+            {% if recipe.meal_type %}
+                <span class="pill">{{ recipe.get_meal_type_display }}</span>
+            {% endif %}
+            {% if recipe.category %}
+                <span class="pill pill--muted">{{ recipe.get_category_display }}</span>
+            {% endif %}
+            {% if recipe.prep_time %}
+                <span class="pill pill--warning">⏱ {{ recipe.prep_time }} min</span>
+            {% endif %}
+        </div>
+    </div>
 
-    {% if all_missing_added %}
-        <button type="button" class="btn-added" disabled>
-            ✓ All missing ingredients added to shopping list
+    <!-- Favourite toggle -->
+    <form method="post" action="{% url 'recipes:toggle_favorite' recipe.id %}">
+        {% csrf_token %}
+        <button type="submit" class="favorite-btn"
+                title="{% if is_favorite %}Remove from favorites{% else %}Add to favorites{% endif %}">
+            {% if is_favorite %}<i class="bi bi-heart-fill"></i>{% else %}<i class="bi bi-heart"></i>{% endif %}
         </button>
-    {% else %}
-        <form method="post" action="{% url 'shopping_list:add_all_missing' recipe.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn-add-all">
-                Add all missing ingredients to shopping list
-            </button>
-        </form>
-    {% endif %}
+    </form>
+</div>
 
-    <ul>
+<div class="row g-4">
+
+    <!-- ============ INGREDIENTS ============ -->
+    <div class="col-lg-7">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h2 class="h4 mb-0">Ingredients</h2>
+
+            {% if all_missing_added %}
+                <span class="pill"><i class="bi bi-check-circle-fill"></i> Everything is covered</span>
+            {% else %}
+                <form method="post" action="{% url 'shopping_list:add_all_missing' recipe.id %}" class="js-add-all-to-list-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-cart-plus"></i> Add all missing to shopping list
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+
         {% for item in ingredients_with_status %}
-            <li>
-                {% if item.has_enough %}
-                    ✅ {{ item.ri.ingredient.title }} — need {{ item.ri.required_quantity|floatformat:"-2" }} {{ item.ri.ingredient.unit }} (you have {{ item.available_qty|floatformat:"-2" }})
-                {% else %}
-                    {% if item.available_qty > 0 %}
-                        ❌ {{ item.ri.ingredient.title }} — need {{ item.ri.required_quantity|floatformat:"-2" }} {{ item.ri.ingredient.unit }}, you have {{ item.available_qty|floatformat:"-2" }} (short {{ item.missing_qty|floatformat:"-2" }})
-                    {% else %}
-                        ❌ {{ item.ri.ingredient.title }} — need {{ item.ri.required_quantity|floatformat:"-2" }} {{ item.ri.ingredient.unit }} (you have none)
-                    {% endif %}
+            <div class="item-row {% if item.has_enough %}item-row--have{% else %}item-row--missing{% endif %}">
+                <div>
+                    <div class="item-row__name">
+                        {% if item.has_enough %}<i class="bi bi-check-circle-fill text-success"></i>{% else %}<i class="bi bi-x-circle-fill text-danger"></i>{% endif %} 
+                        {{ item.ri.ingredient.title }}
+                    </div>
+                    <small class="text-muted">
+                        Need {{ item.ri.required_quantity|floatformat:"-2" }} {{ item.ri.ingredient.unit }}
+                        &middot; you have {{ item.available_qty|floatformat:"-2" }}
+                        {% if not item.has_enough %}
+                            &middot; short {{ item.missing_qty|floatformat:"-2" }}
+                        {% endif %}
+                    </small>
 
-                    {% if item.in_shopping_list %}
-                        <span>✓ Already on shopping list</span>
-                    {% else %}
-                        <span class="hover-add-btn">
-                            <form method="post" action="{% url 'shopping_list:add_item' %}" class="inline-form">
-                                {% csrf_token %}
-                                <input type="hidden" name="ingredient" value="{{ item.ri.ingredient.id }}">
-                                <input type="hidden" name="quantity_needed" value="{{ item.missing_qty }}">
-                                <input type="hidden" name="recipe_id" value="{{ recipe.id }}">
-                                <button type="submit">Add to shopping list</button>
-                            </form>
-                        </span>
+                    {% if item.shopping_qty > 0 %}
+                         
+                        <div><small class="badge rounded-pill bg-light text-secondary fw-normal border border-secondary-subtle"><i class="bi bi-cart3"></i> {{ item.shopping_qty|floatformat:"-2" }} {{ item.ri.ingredient.unit }} already present on your shopping list</small></div>
+                        
                     {% endif %}
+                </div>
+
+                {% if not item.has_enough %}
+                    <form method="post" action="{% url 'shopping_list:add_item' %}" class="js-add-to-list-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="ingredient" value="{{ item.ri.ingredient.id }}">
+                        <input type="hidden" name="quantity_needed" value="{{ item.missing_qty }}">
+                        <input type="hidden" name="recipe_id" value="{{ recipe.id }}">
+
+                        <button type="submit" class="btn btn-outline-primary btn-sm">
+                            + Add {{ item.missing_qty|floatformat:"-2" }} {{ item.ri.ingredient.unit }}
+                        </button>
+                    </form>
                 {% endif %}
-            </li>
+            </div>
+        {% empty %}
+            <div class="empty-state">
+                <span class="empty-state__icon"><i class="bi bi-basket"></i></span>
+                <p class="mb-0">No ingredients recorded for this recipe.</p>
+            </div>
         {% endfor %}
-    </ul>
+    </div>
 
-    <h2>Instructions</h2>
-    <p>{{ recipe.instructions }}</p>
-</body>
-</html>
+    <!-- ============ INSTRUCTIONS ============ -->
+    <div class="col-lg-5">
+        <h2 class="h4 mb-3">Instructions</h2>
+        <div class="card p-3">
+            {% if recipe.instructions %}
+                {{ recipe.instructions|linebreaks }}
+            {% else %}
+                <p class="text-muted mb-0">No instructions were added for this recipe yet.</p>
+            {% endif %}
+        </div>
+
+        <a href="{% url 'shopping_list:shopping_list' %}" class="btn btn-outline-primary w-100 mt-3">
+            View my shopping list
+        </a>
+    </div>
+
+</div>
+
+<!-- ============ JAVASCRIPT ============ -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    //  Handle single ingredient add
+    const addForms = document.querySelectorAll('.js-add-to-list-form');
+    addForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const button = this.querySelector('button[type="submit"]');
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    button.className = 'btn btn-success btn-sm';
+                    button.innerHTML = '✓ Added';
+                }
+            })
+            .catch(error => console.error('Error adding item:', error));
+        });
+    });
+
+    //  handle "Add all missing" bulk action
+    const addAllForm = document.querySelector('.js-add-all-to-list-form');
+    if (addAllForm) {
+        addAllForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const topButton = this.querySelector('button[type="submit"]');
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    
+                    topButton.className = 'btn btn-success btn-sm disabled';
+                    topButton.innerHTML = '✓ All missing added';
+
+                    // Update every single ingredient button on the page to "✓ Added"
+                    const singleButtons = document.querySelectorAll('.js-add-to-list-form button[type="submit"]');
+                    singleButtons.forEach(btn => {
+                        btn.className = 'btn btn-success btn-sm';
+                        btn.innerHTML = '✓ Added';
+                    });
+                }
+            })
+            .catch(error => console.error('Error adding all items:', error));
+        });
+    }
+});
+</script>
+
+{% endblock %}

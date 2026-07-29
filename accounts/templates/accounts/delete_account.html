@@ -1,6 +1,23 @@
-<h2>Delete Account</h2>
-<p>Are you sure you want to delete your account?</p>
-<form method="post">
-    {% csrf_token %}
-    <button type="submit">Confirm Delete</button>
-</form>
+{% extends 'base.html' %}
+{% block title %}Delete Account{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+        <div class="page-header"><h1>Delete Account</h1></div>
+
+        <div class="card p-4">
+            <p>
+                This permanently removes your account together with your pantry,
+                shopping list and favorites. This cannot be undone.
+            </p>
+
+            <form method="post" class="d-flex gap-2">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Yes, delete my account</button>
+                <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
