@@ -1,5 +1,4 @@
 {% extends 'base.html' %} {% block title %}My Pantry{% endblock %} {% block content %}
-
 <div class="page-header">
     <div>
         <h1><i class="bi bi-basket2-fill"></i> My Pantry</h1>
@@ -43,23 +42,30 @@
 {% if pantry_items %} {% for item in pantry_items %}
 <div class="item-row item-row--have" id="item-{{ item.id }}">
     <div>
-        <span class="item-row__name">{{ item.ingredient.title }}</span>
+        <span class="item-rowname">{{ item.ingredient.title }}</span>
 
         <!-- normal view of the quantity -->
         <span class="quantity-view" id="quantity-view-{{ item.id }}">
-                    &mdash; {{ item.quantity|floatformat:"-2" }}
-                    <span class="text-muted">{{ item.ingredient.unit }}</span>
+            &mdash; {{ item.quantity|floatformat:"-2" }}
+            <span class="text-muted">{{ item.ingredient.unit }}</span>
         </span>
 
         <!-- inline editor, hidden until "Edit" is pressed -->
         <span class="quantity-edit d-none" id="quantity-edit-{{ item.id }}">
-                    <input type="number" step="0.01" min="0.01" class="form-control d-inline-block"
-                           style="width: 110px;"
-                           id="quantity-input-{{ item.id }}" value="{{ item.quantity|floatformat:'-2' }}">
-                    <button class="btn btn-sm btn-primary" onclick="saveQuantity({{ item.id }})">Save</button>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="cancelEdit({{ item.id }})">Cancel</button>
-                </span> {% if item.expiration_date %}
-        <span class="pill pill--warning ms-2">Expires {{ item.expiration_date }}</span> {% endif %}
+            <input type="number" step="0.01" min="0.01" class="form-control d-inline-block"
+                   style="width: 110px;"
+                   id="quantity-input-{{ item.id }}" value="{{ item.quantity|floatformat:'-2' }}">
+            <input type="date" class="form-control d-inline-block"
+                   style="width: 140px;"
+                   id="expiration-input-{{ item.id }}" value="{{ item.expiration_date|date:'Y-m-d' }}">
+            <button class="btn btn-sm btn-primary" onclick="saveQuantity({{ item.id }})">Save</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="cancelEdit({{ item.id }})">Cancel</button>
+        </span>
+
+        <!-- dynamic expiration pill with ID and condition toggle -->
+        <span class="pill pill--warning ms-2 {% if not item.expiration_date %}d-none{% endif %}" id="exp-pill-{{ item.id }}">
+            {% if item.expiration_date %}Expires {{ item.expiration_date }}{% endif %}
+        </span>
     </div>
 
     <div class="d-flex gap-1">
@@ -98,7 +104,7 @@
 </form>
 {% else %}
 <div class="empty-state">
-    <span class="empty-state__icon"><i class="bi bi-basket2-fill"></i></span>
+    <span class="empty-stateicon"><i class="bi bi-basket2-fill"></i></span>
     <p>Your pantry is empty. Add what you have at home to get recipe suggestions.</p>
 </div>
 {% endif %} {# hidden form used only to read the CSRF token from JavaScript #}
@@ -106,9 +112,7 @@
 
 {% endblock %} {% block extra_js %}
 <script>
-    // INLINE QUANTITY EDITING
-    // Swaps the text for an input, then saves through the AJAX update view
-    // so the page never reloads.
+    // INLINE EDITING (QUANTITY + EXPIRATION DATE)
     function startEdit(itemId) {
         document.getElementById('quantity-view-' + itemId).classList.add('d-none');
         document.getElementById('quantity-edit-' + itemId).classList.remove('d-none');
@@ -123,7 +127,12 @@
 
     function saveQuantity(itemId) {
         const newQuantity = document.getElementById('quantity-input-' + itemId).value;
+        const newExpiration = document.getElementById('expiration-input-' + itemId).value;
         const csrfToken = document.querySelector('#csrf-form [name=csrfmiddlewaretoken]').value;
+
+        const bodyData = new URLSearchParams();
+        bodyData.append('quantity', newQuantity);
+        bodyData.append('expiration_date', newExpiration);
 
         fetch('/pantry/update/' + itemId + '/', {
                 method: 'POST',
@@ -133,13 +142,25 @@
                     'X-CSRFToken': csrfToken,
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: 'quantity=' + encodeURIComponent(newQuantity),
+                body: bodyData.toString(),
             })
             .then(response => response.json())
             .then(data => {
                 if (data.id) {
+                    // Update quantity display
                     document.getElementById('quantity-view-' + itemId).innerHTML =
                         '&mdash; ' + data.quantity + ' <span class="text-muted">' + data.unit + '</span>';
+
+                    // Dynamic pill update
+                    const expPill = document.getElementById('exp-pill-' + itemId);
+                    if (data.expiration_date) {
+                        expPill.innerText = 'Expires ' + data.expiration_date;
+                        expPill.classList.remove('d-none');
+                    } else {
+                        expPill.innerText = '';
+                        expPill.classList.add('d-none');
+                    }
+
                     cancelEdit(itemId);
                 } else {
                     alert('Could not update: ' + JSON.stringify(data.errors || data));

@@ -1,8 +1,11 @@
 from django.contrib.auth.decorators import login_required
+from django.db.models.aggregates import Sum
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET, require_POST
 from django.shortcuts import redirect
 from django.http import JsonResponse
+from django.db.models import Sum
+
 
 from pantry.models import PantryItem
 from shopping_list.models import ShoppingListItem
@@ -11,9 +14,13 @@ from .models import Ingredient, Recipe, FavoriteRecipe
 
 
 def get_pantry_quantities(user):
-    """Returns a dictionary mapping ingredient_id -> quantity for a given user."""
-    pantry_items = PantryItem.objects.filter(user=user)
-    return {item.ingredient_id: item.quantity for item in pantry_items}
+    """Returns a dictionary mapping ingredient_id -> total quantity across all batches for a given user."""
+    pantry_totals = (
+        PantryItem.objects.filter(user=user)
+        .values("ingredient_id")
+        .annotate(total_quantity=Sum("quantity"))
+    )
+    return {item["ingredient_id"]: item["total_quantity"] for item in pantry_totals}
 
 
 def _filter_recipes(request):

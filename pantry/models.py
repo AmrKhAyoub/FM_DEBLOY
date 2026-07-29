@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
-
 from recipes.models import Ingredient
 
 
@@ -10,7 +9,6 @@ class PantryItem(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="pantry_items"
     )
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    # add  minValuevlider to prevent negative or zero quantities in the database
     quantity = models.DecimalField(
         max_digits=8, 
         decimal_places=2, 
@@ -19,9 +17,13 @@ class PantryItem(models.Model):
     expiration_date = models.DateField(null=True, blank=True)
 
     class Meta:
-        # add unique constraint to ensure that a user cannot have duplicate ingredients in their pantry
+        ordering = ["expiration_date"]
+        # Ensures uniqueness per batch (date) rather than just per ingredient
         constraints = [
-            models.UniqueConstraint(fields=["user", "ingredient"], name="unique_user_pantry_ingredient")
+            models.UniqueConstraint(
+                fields=["user", "ingredient", "expiration_date"], 
+                name="unique_user_ingredient_expiration"
+            )
         ]
 
     def __str__(self):

@@ -46,21 +46,16 @@ def pantry_add_view(request):
     quantity = form.cleaned_data["quantity"]
     expiration_date = form.cleaned_data.get("expiration_date")
 
+    # Match existing item by user, ingredient AND exact expiration date
     existing_item = PantryItem.objects.filter(
-        user=request.user, ingredient=ingredient
+        user=request.user, ingredient=ingredient, expiration_date=expiration_date
     ).first()
 
     if existing_item:
         existing_item.quantity += quantity
-        fields_to_update = ["quantity"]
-
-        if expiration_date:
-            existing_item.expiration_date = expiration_date
-            fields_to_update.append("expiration_date")
-
-        existing_item.save(update_fields=fields_to_update)
+        existing_item.save(update_fields=["quantity"])
         item = existing_item
-        message = "Ingredient already exists. Quantity updated successfully!"
+        message = "Matching ingredient batch found. Quantity updated successfully!"
     else:
         item = form.save(commit=False)
         item.user = request.user
@@ -73,11 +68,11 @@ def pantry_add_view(request):
             "ingredient_name": item.ingredient.title,
             "quantity": item.quantity,
             "unit": item.ingredient.unit,
+            "expiration_date": item.expiration_date.strftime("%Y-%m-%d") if item.expiration_date else "",
             "message": message,
         }
         return JsonResponse(data, status=200)
 
-   
     messages.success(request, message)
     return redirect("pantry:list")
 

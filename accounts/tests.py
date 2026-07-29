@@ -40,6 +40,7 @@ class ProfileTests(TestCase):
             username="cook", email="cook@example.com", password="pw-for-tests-123"
         )
 
+    # Make sure protected pages require login
     def test_profile_requires_login(self):
         response = self.client.get(reverse("accounts:profile"))
 
@@ -73,6 +74,7 @@ class ProfileTests(TestCase):
         self.assertFalse(User.objects.filter(username="cook").exists())
 
 
+# Check that all main pages load correctly
 class PageRenderTests(TestCase):
     """Every page returns 200 and uses the shared base layout."""
 
