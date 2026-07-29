@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -13,27 +14,32 @@ def pantry_list_view(request):
     pantry_items = PantryItem.objects.select_related("ingredient").filter(
         user=request.user
     )
-    context = {"pantry_items": pantry_items}
+    
+    form = PantryItemForm()
+    
+    context = {
+        "pantry_items": pantry_items,
+        "form": form,
+    }
     return render(request, "pantry/pantry_list.html", context)
 
 
 @login_required
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["POST"])  
 def pantry_add_view(request):
-    if request.method == "GET":
-        form = PantryItemForm()
-        return render(request, "pantry/pantry_form.html", {"form": form})
-
     form = PantryItemForm(request.POST)
 
     if not form.is_valid():
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             return JsonResponse(form.errors, status=400)
 
+        pantry_items = PantryItem.objects.select_related("ingredient").filter(
+            user=request.user
+        )
         return render(
             request,
-            "pantry/pantry_form.html",
-            {"form": form},
+            "pantry/pantry_list.html",
+            {"pantry_items": pantry_items, "form": form},
         )
 
     ingredient = form.cleaned_data["ingredient"]
@@ -52,7 +58,6 @@ def pantry_add_view(request):
             existing_item.expiration_date = expiration_date
             fields_to_update.append("expiration_date")
 
-        # use update_fields to avoid overwriting unnecessary fields
         existing_item.save(update_fields=fields_to_update)
         item = existing_item
         message = "Ingredient already exists. Quantity updated successfully!"
@@ -72,6 +77,8 @@ def pantry_add_view(request):
         }
         return JsonResponse(data, status=200)
 
+   
+    messages.success(request, message)
     return redirect("pantry:list")
 
 
@@ -80,30 +87,28 @@ def pantry_add_view(request):
 def pantry_update_view(request, pk):
     item = get_object_or_404(PantryItem, pk=pk, user=request.user)
 
-    if request.method == "GET":
-        form = PantryItemForm(instance=item)
-        return render(request, "pantry/pantry_form.html", {"form": form, "item": item})
+    data = request.POST.copy()
+    if "ingredient" not in data:
+        data["ingredient"] = item.ingredient_id
 
-    form = PantryItemForm(request.POST, instance=item)
+    form = PantryItemForm(data, instance=item)
 
     if not form.is_valid():
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
-            return JsonResponse(form.errors, status=400)
-
-        return render(request, "pantry/pantry_form.html", {"form": form, "item": item})
+            return JsonResponse({"errors": form.errors}, status=400)
+        return redirect("pantry:list")
 
     item = form.save()
     message = "Item updated successfully."
 
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
-        data = {
+        return JsonResponse({
             "id": item.id,
             "ingredient_name": item.ingredient.title,
             "quantity": item.quantity,
             "unit": item.ingredient.unit,
             "message": message,
-        }
-        return JsonResponse(data, status=200)
+        }, status=200)
 
     return redirect("pantry:list")
 
@@ -119,4 +124,14 @@ def pantry_delete_view(request, pk):
     item.delete()
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         return JsonResponse({"message": "Item deleted successfully."}, status=200)
+    return redirect("pantry:list")
+
+
+@login_required
+@require_http_methods(["POST"])
+def clear_pantry(request):
+    PantryItem.objects.filter(
+        user=request.user
+    ).delete()
+
     return redirect("pantry:list")

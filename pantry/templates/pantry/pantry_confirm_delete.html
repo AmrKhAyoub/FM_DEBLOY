@@ -1,11 +1,30 @@
-<h2>Delete Pantry Item</h2>
+{% extends 'base.html' %}
+{% block title %}Delete {{ object.ingredient.title }}{% endblock %}
 
-<p>Are you sure you want to delete "{{ object.ingredient.title }}" from your pantry?</p>
+{% comment %}
+    Fallback confirmation page. The pantry list normally deletes through a
+    Bootstrap modal, but opening the delete URL directly lands here.
+{% endcomment %}
 
-<form method="post">
-    {% csrf_token %}
-    <button type="submit">Confirm Delete</button>
-</form>
+{% block content %}
 
-<br>
-<a href="{% url 'pantry:list' %}">Cancel</a>
+<div class="page-header">
+    <h1>Delete pantry item</h1>
+</div>
+
+<div class="card p-4">
+    <p>
+        Are you sure you want to remove
+        <strong>{{ object.ingredient.title }}</strong>
+        ({{ object.quantity|floatformat:"-2" }} {{ object.ingredient.unit }})
+        from your pantry?
+    </p>
+
+    <form method="post" class="d-flex gap-2">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, delete it</button>
+        <a href="{% url 'pantry:list' %}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</div>
+
+{% endblock %}

@@ -1,9 +1,38 @@
+{% comment %}
+    Partial template holding just the recipe cards.
+    It is included by recipe_list.html on a normal page load, and returned on
+    its own by the live_search view so JavaScript can swap it in.
+{% endcomment %}
+
 {% if recipes %}
-    <ul>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
         {% for recipe in recipes %}
-            <li><a href="{% url 'recipes:recipe_detail' recipe.id %}">{{ recipe.title }}</a> — {{ recipe.meal_type }}</li>
+            <div class="col">
+                <a href="{% url 'recipes:recipe_detail' recipe.id %}" class="card recipe-card">
+                    <div class="recipe-card__banner"><i class="bi {{ recipe.icon }}"></i></div>
+                    <div class="recipe-card__body">
+                        <h5 class="recipe-card__title">{{ recipe.title }}</h5>
+
+                        <div class="d-flex flex-wrap gap-1 mb-2">
+                            {% if recipe.meal_type %}
+                                <span class="pill">{{ recipe.get_meal_type_display }}</span>
+                            {% endif %}
+                            {% if recipe.category %}
+                                <span class="pill pill--muted">{{ recipe.get_category_display }}</span>
+                            {% endif %}
+                        </div>
+
+                        {% if recipe.prep_time %}
+                            <small class="text-muted"><i class="bi bi-clock"></i> {{ recipe.prep_time }} min</small>
+                        {% endif %}
+                    </div>
+                </a>
+            </div>
         {% endfor %}
-    </ul>
+    </div>
 {% else %}
-    <p>No recipes found.</p>
+    <div class="empty-state">
+        <span class="empty-state__icon"><i class="bi bi-search"></i></span>
+        <p class="mb-0">No recipes match your search.</p>
+    </div>
 {% endif %}

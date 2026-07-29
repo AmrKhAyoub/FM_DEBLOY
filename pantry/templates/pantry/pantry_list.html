@@ -1,18 +1,167 @@
-<h2>My Pantry</h2>
+{% extends 'base.html' %}
+{% block title %}My Pantry{% endblock %}
 
-<a href="{% url 'pantry:add' %}">Add New Item</a>
+{% block content %}
 
-<ul>
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-basket2-fill"></i> My Pantry</h1>
+        <p class="subtitle">What you already have at home. Recipes are matched against this list.</p>
+    </div>
+    {% if pantry_items %}
+        <span class="pill">{{ pantry_items|length }} item{{ pantry_items|length|pluralize }}</span>
+    {% endif %}
+</div>
+
+<!-- ADD FORM -->
+<div class="form-panel">
+    <form method="post" action="{% url 'pantry:add' %}" class="row g-2 align-items-end">
+        {% csrf_token %}
+        <div class="col-md-4">
+            <label class="form-label small text-muted mb-1">Ingredient</label>
+            {{ form.ingredient }}
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small text-muted mb-1">Quantity</label>
+            {{ form.quantity }}
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small text-muted mb-1">Expires (optional)</label>
+            {{ form.expiration_date }}
+        </div>
+        <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-primary">Add Item</button>
+        </div>
+    </form>
+
+    {# show validation errors coming back from the form #}
+    {% if form.errors %}
+        <div class="alert alert-danger mt-3 mb-0 py-2">
+            {% for field, errors in form.errors.items %}
+                <div class="small">{{ field }}: {{ errors|join:", " }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- PANTRY ITEMS -->
+{% if pantry_items %}
     {% for item in pantry_items %}
-        <li>
-            {{ item.ingredient.title }} - {{ item.quantity }} {{ item.ingredient.unit }}
-            {% if item.expiration_date %}
-                (Expires: {{ item.expiration_date }})
-            {% endif %}
-            | <a href="{% url 'pantry:update' item.pk %}">Edit</a>
-            | <a href="{% url 'pantry:delete' item.pk %}">Delete</a>
-        </li>
-    {% empty %}
-        <li>No pantry items found.</li>
+        <div class="item-row item-row--have" id="item-{{ item.id }}">
+            <div>
+                <span class="item-row__name">{{ item.ingredient.title }}</span>
+
+                <!-- normal view of the quantity -->
+                <span class="quantity-view" id="quantity-view-{{ item.id }}">
+                    &mdash; {{ item.quantity|floatformat:"-2" }}
+                    <span class="text-muted">{{ item.ingredient.unit }}</span>
+                </span>
+
+                <!-- inline editor, hidden until "Edit" is pressed -->
+                <span class="quantity-edit d-none" id="quantity-edit-{{ item.id }}">
+                    <input type="number" step="0.01" min="0.01" class="form-control d-inline-block"
+                           style="width: 110px;"
+                           id="quantity-input-{{ item.id }}" value="{{ item.quantity|floatformat:'-2' }}">
+                    <button class="btn btn-sm btn-primary" onclick="saveQuantity({{ item.id }})">Save</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="cancelEdit({{ item.id }})">Cancel</button>
+                </span>
+
+                {% if item.expiration_date %}
+                    <span class="pill pill--warning ms-2">Expires {{ item.expiration_date }}</span>
+                {% endif %}
+            </div>
+
+            <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-secondary edit-btn-{{ item.id }}"
+                        onclick="startEdit({{ item.id }})">Edit</button>
+
+                <!-- Bootstrap modal so a delete is always confirmed first -->
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                        data-bs-toggle="modal" data-bs-target="#deleteModal-{{ item.id }}">Delete</button>
+            </div>
+        </div>
+
+        <div class="modal fade" id="deleteModal-{{ item.id }}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Delete pantry item</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        Remove <strong>{{ item.ingredient.title }}</strong> from your pantry?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form method="post" action="{% url 'pantry:delete' item.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     {% endfor %}
-</ul>
+
+    <form method="post" action="{% url 'pantry:clear_pantry' %}" class="mt-3"
+          onsubmit="return confirm('Empty the whole pantry?');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger btn-sm">Clear pantry</button>
+    </form>
+{% else %}
+    <div class="empty-state">
+        <span class="empty-state__icon"><i class="bi bi-basket2-fill"></i></span>
+        <p>Your pantry is empty. Add what you have at home to get recipe suggestions.</p>
+    </div>
+{% endif %}
+
+{# hidden form used only to read the CSRF token from JavaScript #}
+<form id="csrf-form">{% csrf_token %}</form>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+    // INLINE QUANTITY EDITING
+    // Swaps the text for an input, then saves through the AJAX update view
+    // so the page never reloads.
+    function startEdit(itemId) {
+        document.getElementById('quantity-view-' + itemId).classList.add('d-none');
+        document.getElementById('quantity-edit-' + itemId).classList.remove('d-none');
+        document.querySelector('.edit-btn-' + itemId).classList.add('d-none');
+    }
+
+    function cancelEdit(itemId) {
+        document.getElementById('quantity-view-' + itemId).classList.remove('d-none');
+        document.getElementById('quantity-edit-' + itemId).classList.add('d-none');
+        document.querySelector('.edit-btn-' + itemId).classList.remove('d-none');
+    }
+
+    function saveQuantity(itemId) {
+        const newQuantity = document.getElementById('quantity-input-' + itemId).value;
+        const csrfToken = document.querySelector('#csrf-form [name=csrfmiddlewaretoken]').value;
+
+        fetch('/pantry/update/' + itemId + '/', {
+            method: 'POST',
+            headers: {
+                // this header is how the view knows to answer with JSON
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'quantity=' + encodeURIComponent(newQuantity),
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.id) {
+                    document.getElementById('quantity-view-' + itemId).innerHTML =
+                        '&mdash; ' + data.quantity + ' <span class="text-muted">' + data.unit + '</span>';
+                    cancelEdit(itemId);
+                } else {
+                    alert('Could not update: ' + JSON.stringify(data.errors || data));
+                }
+            });
+    }
+</script>
+{% endblock %}

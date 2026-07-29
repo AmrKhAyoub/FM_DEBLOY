@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -19,13 +20,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-d2)z$srx%yi%+pb4ent)f!sa7^9zb$c^r+a9b2kaxdae)rz$^k'
+# The real key is read from an environment variable so it never has to live in
+# the repository. The fallback keeps `runserver` working during development.
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-d2)z$srx%yi%+pb4ent)f!sa7^9zb$c^r+a9b2kaxdae)rz$^k',
+)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Debug stays on locally, but can be switched off with DJANGO_DEBUG=0.
+DEBUG = os.environ.get('DJANGO_DEBUG', '1') == '1'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -59,7 +64,7 @@ ROOT_URLCONF = 'smartmeal.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -105,6 +110,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
+# Where @login_required sends anonymous visitors, and where people land
+# after signing in or out.
+LOGIN_URL = 'accounts:login'
+LOGIN_REDIRECT_URL = 'recipes:recipe_list'
+LOGOUT_REDIRECT_URL = 'accounts:login'
+
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
@@ -121,3 +132,4 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
