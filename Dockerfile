@@ -15,4 +15,4 @@ RUN DATABASE_URL=sqlite:///db.sqlite3 python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "SMART_MEAL.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "smartmeal.wsgi:application"]
