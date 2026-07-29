@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 
 class Ingredient(models.Model):
@@ -72,7 +73,24 @@ class Recipe(models.Model):
         blank=True,
     )
 
+    image_url = models.URLField(blank=True)
+
     ingredients = models.ManyToManyField(Ingredient, through="RecipeIngredient")
+
+    # emoji shown on the recipe cards, one per category. It is a property and
+    # not a database column, so no migration is needed to change it.
+    CATEGORY_ICONS = {
+        RecipeCategoryChoices.DESSERT: "🍰",
+        RecipeCategoryChoices.PASTRIES: "🥐",
+        RecipeCategoryChoices.GRILLS: "🍖",
+        RecipeCategoryChoices.SOUPS: "🍲",
+        RecipeCategoryChoices.SALADS: "🥗",
+        RecipeCategoryChoices.MAIN_DISH: "🍽️",
+    }
+
+    @property
+    def icon(self):
+        return self.CATEGORY_ICONS.get(self.category, "🍳")
 
     def __str__(self):
         return self.title
@@ -91,3 +109,27 @@ class RecipeIngredient(models.Model):
 
     def __str__(self):
         return f"{self.required_quantity} {self.ingredient.unit} of {self.ingredient.title} for {self.recipe.title}"
+
+
+# favorite Recipe Model
+class FavoriteRecipe(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "recipe"],
+                name="unique_user_favorite_recipe",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.user} - {self.recipe}"

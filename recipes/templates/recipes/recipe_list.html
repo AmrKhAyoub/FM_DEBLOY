@@ -1,58 +1,71 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>All Recipes</title>
-</head>
-<body>
-    <h1>All Recipes</h1>
+{% extends 'base.html' %}
+{% block title %}All Recipes{% endblock %}
 
-    <form method="get" action="{% url 'recipes:recipe_list' %}">
-        {{ form.search_query }}
-        {{ form.category }}
-        {{ form.meal_type }}
+{% block content %}
 
-        <button type="submit">Search</button>
-    </form>
-
-    <div id="search-results">
-        {% include 'recipes/_recipe_results.html' %}
+<div class="page-header">
+    <div>
+        <h1>All Recipes</h1>
+        <p class="subtitle">Browse the collection and see what you can cook tonight.</p>
     </div>
+    {% if user.is_authenticated %}
+        <a href="{% url 'recipes:recommended_recipes' %}" class="btn btn-primary">
+            ✨ What can I cook?
+        </a>
+    {% endif %}
+</div>
 
-    <script>
-        let searchTimeout;
+<!-- SEARCH AND FILTER
+     The three inputs are rendered from RecipeSearchFilterForm, so the field
+     names here always match the names the view reads. -->
+<div class="form-panel">
+    <form method="get" id="filter-form" class="row g-2">
+        <div class="col-md-5">{{ form.search_query }}</div>
+        <div class="col-md-3">{{ form.meal_type }}</div>
+        <div class="col-md-3">{{ form.category }}</div>
+        <div class="col-md-1 d-grid">
+            <button type="submit" class="btn btn-primary">Go</button>
+        </div>
+    </form>
+</div>
 
-        function liveSearch() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                // Django automatically assigns element IDs matching 'id_<fieldname>'
-                const query = document.getElementById('id_search_query').value;
-                const category = document.getElementById('id_category').value;
-                const mealType = document.getElementById('id_meal_type').value;
+<!-- The live search replaces the contents of this box without reloading -->
+<div id="search-results">
+    {% include 'recipes/_recipe_results.html' %}
+</div>
 
-                const params = new URLSearchParams({
-                    search_query: query,
-                    category: category,
-                    meal_type: mealType
-                });
+{% endblock %}
 
-                fetch("{% url 'recipes:live_search' %}?" + params.toString())
-                    .then(response => response.text())
-                    .then(html => {
-                        document.getElementById('search-results').innerHTML = html;
-                    });
-            }, 300);
-        }
 
-        // Attach event listeners to the Django form fields once the page loads
-        document.addEventListener("DOMContentLoaded", function () {
-            const searchInput = document.getElementById('id_search_query');
-            const categorySelect = document.getElementById('id_category');
-            const mealTypeSelect = document.getElementById('id_meal_type');
+{% block extra_js %}
+<script>
+    // LIVE SEARCH
+    // Instead of reloading the whole page we ask the server for just the
+    // results block and drop the returned HTML into #search-results.
+    const filterForm = document.getElementById('filter-form');
+    const resultsBox = document.getElementById('search-results');
+    let searchTimeout;
 
-            if (searchInput) searchInput.addEventListener('input', liveSearch);
-            if (categorySelect) categorySelect.addEventListener('change', liveSearch);
-            if (mealTypeSelect) mealTypeSelect.addEventListener('change', liveSearch);
-        });
-    </script>
-</body>
-</html>
+    function liveSearch() {
+        // wait 300ms after the last keystroke so we don't send a request per letter
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            // building the query from the form gives us the exact field names Django expects
+            const params = new URLSearchParams(new FormData(filterForm));
+
+            fetch("{% url 'recipes:live_search' %}?" + params.toString())
+                .then(response => response.text())
+                .then(html => { resultsBox.innerHTML = html; });
+        }, 300);
+    }
+
+    filterForm.addEventListener('input', liveSearch);
+    filterForm.addEventListener('change', liveSearch);
+
+    // submitting still works if JavaScript is disabled; here we just intercept it
+    filterForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        liveSearch();
+    });
+</script>
+{% endblock %}

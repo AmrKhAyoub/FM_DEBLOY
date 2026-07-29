@@ -9,4 +9,5 @@ urlpatterns = [
     path("add/", views.pantry_add_view, name="add"),
     path("update/<int:pk>/", views.pantry_update_view, name="update"),
     path("delete/<int:pk>/", views.pantry_delete_view, name="delete"),
+    path("clear/",views.clear_pantry,name="clear_pantry"),
 ]

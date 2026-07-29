@@ -1,89 +1,60 @@
+import json
+from pathlib import Path
+
 from django.core.management.base import BaseCommand
-from recipes.models import Recipe, RecipeIngredient
+from recipes.models import Ingredient, Recipe, RecipeIngredient
 
 
 class Command(BaseCommand):
-    help = 'Seeds the database with sample recipes and ingredients'
+    help = "Seed recipes from recipe_data.json"
 
     def handle(self, *args, **kwargs):
-        # Clear existing recipes so we don't create duplicates if run twice
+
+        json_path = (
+          Path(__file__).resolve().parents[3]
+          / "data_recipes.json"
+        )
+
+        with open(json_path, "r", encoding="utf-8") as file:
+            recipes = json.load(file)
+
+        # Clear old data
+        RecipeIngredient.objects.all().delete()
         Recipe.objects.all().delete()
 
-        recipes_data = [
-            {
-                'name': 'Tomato Pasta',
-                'instructions': 'Boil pasta until soft. In a pan, cook chopped tomato and garlic in oil for 5 minutes. Mix with pasta and serve.',
-                'meal_type': 'dinner',
-                'cuisine': 'Italian',
-                'ingredients': [
-                    ('pasta', '200g'),
-                    ('tomato', '2 pieces'),
-                    ('garlic', '2 cloves'),
-                    ('olive oil', '2 tbsp'),
-                ],
-            },
-            {
-                'name': 'Vegetable Omelette',
-                'instructions': 'Beat eggs with salt. Add chopped onion and pepper. Cook in a pan over medium heat until set.',
-                'meal_type': 'breakfast',
-                'cuisine': 'any',
-                'ingredients': [
-                    ('egg', '3 pieces'),
-                    ('onion', '1 piece'),
-                    ('pepper', '1 piece'),
-                    ('salt', '1 pinch'),
-                ],
-            },
-            {
-                'name': 'Chicken Rice Bowl',
-                'instructions': 'Cook rice. Grill chicken with spices. Serve chicken over rice with a side of vegetables.',
-                'meal_type': 'lunch',
-                'cuisine': 'Sudanese',
-                'ingredients': [
-                    ('chicken', '300g'),
-                    ('rice', '1 cup'),
-                    ('onion', '1 piece'),
-                    ('spices', '1 tbsp'),
-                ],
-            },
-            {
-                'name': 'Lentil Soup',
-                'instructions': 'Boil lentils with chopped onion and garlic until soft. Blend if desired. Season with salt and cumin.',
-                'meal_type': 'lunch',
-                'cuisine': 'Sudanese',
-                'ingredients': [
-                    ('lentils', '1 cup'),
-                    ('onion', '1 piece'),
-                    ('garlic', '2 cloves'),
-                    ('cumin', '1 tsp'),
-                ],
-            },
-            {
-                'name': 'Greek Salad',
-                'instructions': 'Chop tomato, cucumber, and onion. Mix with olive oil, salt, and a bit of lemon juice.',
-                'meal_type': 'lunch',
-                'cuisine': 'Greek',
-                'ingredients': [
-                    ('tomato', '2 pieces'),
-                    ('cucumber', '1 piece'),
-                    ('onion', '1 piece'),
-                    ('olive oil', '2 tbsp'),
-                ],
-            },
-        ]
+        created = 0
 
-        for data in recipes_data:
+        for recipe_data in recipes:
+
             recipe = Recipe.objects.create(
-                name=data['name'],
-                instructions=data['instructions'],
-                meal_type=data['meal_type'],
-                cuisine=data['cuisine'],
+                title=recipe_data["title"],
+                instructions=recipe_data["instructions"],
+                prep_time=recipe_data["prep_time"],
+                meal_type=recipe_data["meal_type"],
+                category=recipe_data["category"],
+                image_url=recipe_data.get("image_url", ""),
             )
-            for ingredient_name, quantity in data['ingredients']:
-                RecipeIngredient.objects.create(
-                    recipe=recipe,
-                    ingredient_name=ingredient_name,
-                    quantity=quantity,
+
+            for ingredient_data in recipe_data["ingredients"]:
+
+                ingredient, _ = Ingredient.objects.get_or_create(
+                    title=ingredient_data["title"],
+                    defaults={
+                        "category": ingredient_data["category"],
+                        "unit": ingredient_data["unit"],
+                    },
                 )
 
-        self.stdout.write(self.style.SUCCESS(f'Successfully seeded {len(recipes_data)} recipes!'))
+                RecipeIngredient.objects.create(
+                    recipe=recipe,
+                    ingredient=ingredient,
+                    required_quantity=ingredient_data["required_quantity"],
+                )
+
+            created += 1
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Successfully imported {created} recipes."
+            )
+        )
