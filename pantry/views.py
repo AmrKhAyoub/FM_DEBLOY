@@ -123,7 +123,7 @@ def pantry_delete_view(request, pk):
 
 
 @login_required
-@require_http_methods(["POST"])
+@require_http_methods(["POST","DELETE"])
 def clear_pantry(request):
     PantryItem.objects.filter(
         user=request.user
