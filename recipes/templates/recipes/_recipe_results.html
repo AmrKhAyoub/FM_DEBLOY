@@ -17,7 +17,8 @@
                 </div>
 
                 {% if recipe.prep_time %}
-                <small class="text-muted">⏱ {{ recipe.prep_time }} min</small> {% endif %}
+                <small class="text-muted"><i class="bi bi-clock"></i> 
+                    {{ recipe.prep_time }} min</small> {% endif %}
             </div>
         </a>
     </div>
@@ -25,7 +26,7 @@
 </div>
 {% else %}
 <div class="empty-state">
-    <span class="empty-state__icon">🔍</span>
+    <span class="empty-state__icon"><i class="bi bi-search"></i></span>
     <p class="mb-0">No recipes match your search.</p>
 </div>
 {% endif %}

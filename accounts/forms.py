@@ -37,7 +37,7 @@ class CustomUserLoginForm(BootstrapFormMixin, AuthenticationForm):
 class CustomUserUpdateForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = CustomUser
-        # Fields the user is allowed to edit. Password is not here.
+        # Fields the user is allowed to edit. password is not here.
         fields = ("username", "email")
 
 

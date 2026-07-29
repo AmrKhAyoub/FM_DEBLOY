@@ -77,20 +77,20 @@ class Recipe(models.Model):
 
     ingredients = models.ManyToManyField(Ingredient, through="RecipeIngredient")
 
-    # emoji shown on the recipe cards, one per category. It is a property and
-    # not a database column, so no migration is needed to change it.
+    
     CATEGORY_ICONS = {
-        RecipeCategoryChoices.DESSERT: "🍰",
-        RecipeCategoryChoices.PASTRIES: "🥐",
-        RecipeCategoryChoices.GRILLS: "🍖",
-        RecipeCategoryChoices.SOUPS: "🍲",
-        RecipeCategoryChoices.SALADS: "🥗",
-        RecipeCategoryChoices.MAIN_DISH: "🍽️",
-    }
+    RecipeCategoryChoices.DESSERT: "bi-cake2-fill",
+    RecipeCategoryChoices.PASTRIES: "bi-cookie",
+    RecipeCategoryChoices.GRILLS: "bi-fire",
+    RecipeCategoryChoices.SOUPS: "bi-cup-hot-fill",
+    RecipeCategoryChoices.SALADS: "bi-flower3",
+    RecipeCategoryChoices.MAIN_DISH: "bi-egg-fried",
+}
 
     @property
     def icon(self):
-        return self.CATEGORY_ICONS.get(self.category, "🍳")
+        return self.CATEGORY_ICONS.get(self.category, "bi-basket2")
+    
 
     def __str__(self):
         return self.title

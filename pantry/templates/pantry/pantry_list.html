@@ -2,7 +2,7 @@
 
 <div class="page-header">
     <div>
-        <h1>🧺 My Pantry</h1>
+        <h1><i class="bi bi-basket2-fill"></i> My Pantry</h1>
         <p class="subtitle">What you already have at home. Recipes are matched against this list.</p>
     </div>
     {% if pantry_items %}
@@ -98,7 +98,7 @@
 </form>
 {% else %}
 <div class="empty-state">
-    <span class="empty-state__icon">🧺</span>
+    <span class="empty-state__icon"><i class="bi bi-basket2-fill"></i></span>
     <p>Your pantry is empty. Add what you have at home to get recipe suggestions.</p>
 </div>
 {% endif %} {# hidden form used only to read the CSRF token from JavaScript #}

@@ -2,10 +2,9 @@
 
 <a href="{% url 'recipes:recipe_list' %}" class="text-muted text-decoration-none">&larr; Back to all recipes</a>
 
-
 <div class="page-header mt-2">
     <div>
-        <h1>{{ recipe.icon }} {{ recipe.title }}</h1>
+        <h1><i class="bi {{ recipe.icon }}"></i> {{ recipe.title }}</h1>
         <div class="d-flex flex-wrap gap-1 mt-2">
             {% if recipe.meal_type %}
             <span class="pill">{{ recipe.get_meal_type_display }}</span> {% endif %} {% if recipe.category %}
@@ -14,11 +13,11 @@
         </div>
     </div>
 
-    <!-- Favourite toggle: a filled heart means it is already saved -->
+    <!-- Favourite toggle -->
     <form method="post" action="{% url 'recipes:toggle_favorite' recipe.id %}">
         {% csrf_token %}
         <button type="submit" class="favorite-btn" title="{% if is_favorite %}Remove from favorites{% else %}Add to favorites{% endif %}">
-            {% if is_favorite %}❤️{% else %}🤍{% endif %}
+            {% if is_favorite %}<i class="bi bi-heart-fill"></i>{% else %}<i class="bi bi-heart"></i>{% endif %}
         </button>
     </form>
 </div>
@@ -33,21 +32,21 @@
             <h2 class="h4 mb-0">Ingredients</h2>
 
             {% if all_missing_added %}
-            <span class="pill">✓ Everything is covered</span> {% else %}
-            <form method="post" action="{% url 'shopping_list:add_all_missing' recipe.id %}">
+            <span class="pill"><i class="bi bi-check-circle-fill"></i> Everything is covered</span> {% else %}
+            <form method="post" action="{% url 'shopping_list:add_all_missing' recipe.id %}" class="js-add-all-to-list-form">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-primary btn-sm">
-                        🛒 Add all missing to shopping list
+                        <i class="bi bi-cart-plus"></i> Add all missing to shopping list
                     </button>
             </form>
             {% endif %}
         </div>
 
-        {% for item in ingredients_with_status %} {# green row = enough in the pantry, red row = something is missing #}
+        {% for item in ingredients_with_status %}
         <div class="item-row {% if item.has_enough %}item-row--have{% else %}item-row--missing{% endif %}">
             <div>
                 <div class="item-row__name">
-                    {% if item.has_enough %}✅{% else %}❌{% endif %} {{ item.ri.ingredient.title }}
+                    {% if item.has_enough %}<i class="bi bi-check-circle-fill text-success"></i>{% else %}<i class="bi bi-x-circle-fill text-danger"></i>{% endif %} {{ item.ri.ingredient.title }}
                 </div>
                 <small class="text-muted">
                         Need {{ item.ri.required_quantity|floatformat:"-2" }} {{ item.ri.ingredient.unit }}
@@ -56,26 +55,28 @@
                             &middot; short {{ item.missing_qty|floatformat:"-2" }}
                         {% endif %}
                     </small> {% if item.shopping_qty > 0 %}
-                <div><small class="text-muted">🛒 {{ item.shopping_qty|floatformat:"-2" }} {{ item.ri.ingredient.unit }} already on your shopping list</small></div>
+
+                <div><small class="badge rounded-pill bg-light text-secondary fw-normal border border-secondary-subtle"><i class="bi bi-cart3"></i> {{ item.shopping_qty|floatformat:"-2" }} {{ item.ri.ingredient.unit }} already present on your shopping list</small></div>
+
                 {% endif %}
             </div>
 
-            {% if not item.has_enough %} {% if item.covers_shortfall %}
-            <span class="pill">✓ On the list</span> {% else %}
-            <form method="post" action="{% url 'shopping_list:add_item' %}">
+            {% if not item.has_enough %}
+            <form method="post" action="{% url 'shopping_list:add_item' %}" class="js-add-to-list-form">
                 {% csrf_token %}
                 <input type="hidden" name="ingredient" value="{{ item.ri.ingredient.id }}">
                 <input type="hidden" name="quantity_needed" value="{{ item.missing_qty }}">
                 <input type="hidden" name="recipe_id" value="{{ recipe.id }}">
+
                 <button type="submit" class="btn btn-outline-primary btn-sm">
-                                + Add {{ item.missing_qty|floatformat:"-2" }} {{ item.ri.ingredient.unit }}
-                            </button>
+                            + Add {{ item.missing_qty|floatformat:"-2" }} {{ item.ri.ingredient.unit }}
+                        </button>
             </form>
-            {% endif %} {% endif %}
+            {% endif %}
         </div>
         {% empty %}
         <div class="empty-state">
-            <span class="empty-state__icon">🥄</span>
+            <span class="empty-state__icon"><i class="bi bi-basket"></i></span>
             <p class="mb-0">No ingredients recorded for this recipe.</p>
         </div>
         {% endfor %}
@@ -96,5 +97,64 @@
     </div>
 
 </div>
+
+<!-- ============ JAVASCRIPT ============ -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        //  Handle single ingredient add
+        const addForms = document.querySelectorAll('.js-add-to-list-form');
+        addForms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const button = this.querySelector('button[type="submit"]');
+                const formData = new FormData(this);
+
+                fetch(this.action, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            button.className = 'btn btn-success btn-sm';
+                            button.innerHTML = '✓ Added';
+                        }
+                    })
+                    .catch(error => console.error('Error adding item:', error));
+            });
+        });
+
+        //  handle "Add all missing" bulk action
+        const addAllForm = document.querySelector('.js-add-all-to-list-form');
+        if (addAllForm) {
+            addAllForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const topButton = this.querySelector('button[type="submit"]');
+                const formData = new FormData(this);
+
+                fetch(this.action, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (response.ok) {
+
+                            topButton.className = 'btn btn-success btn-sm disabled';
+                            topButton.innerHTML = '✓ All missing added';
+
+                            // Update every single ingredient button on the page to "✓ Added"
+                            const singleButtons = document.querySelectorAll('.js-add-to-list-form button[type="submit"]');
+                            singleButtons.forEach(btn => {
+                                btn.className = 'btn btn-success btn-sm';
+                                btn.innerHTML = '✓ Added';
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error adding all items:', error));
+            });
+        }
+    });
+</script>
 
 {% endblock %}

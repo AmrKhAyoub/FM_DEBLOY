@@ -1,50 +1,40 @@
-{% extends 'base.html' %}
-{% block title %}Recommended for You{% endblock %}
-
-{% block content %}
+{% extends 'base.html' %} {% block title %}Recommended for You{% endblock %} {% block content %}
 
 <div class="page-header">
     <div>
-        <h1>✨ Recommended for You</h1>
+        <h1><i class="bi bi-stars"></i> Recommended for You</h1>
         <p class="subtitle">Recipes are ranked by how much of each one your pantry already covers.</p>
     </div>
     <a href="{% url 'pantry:list' %}" class="btn btn-outline-primary">Update my pantry</a>
 </div>
 
 {% if scored_recipes %}
-    <div class="row row-cols-1 row-cols-md-2 g-3">
-        {% for item in scored_recipes %}
-            <div class="col">
-                <a href="{% url 'recipes:recipe_detail' item.recipe.id %}" class="card recipe-card p-3">
-                    <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
-                        <h5 class="recipe-card__title mb-0">
-                            {{ item.recipe.icon }} {{ item.recipe.title }}
-                        </h5>
-                        {% if item.can_cook %}
-                            <span class="pill">Ready to cook</span>
-                        {% else %}
-                            <span class="pill pill--warning">{{ item.match_percent }}%</span>
-                        {% endif %}
-                    </div>
-
-                    <small class="text-muted">
-                        You have {{ item.matched }} of {{ item.total }} ingredients
-                    </small>
-
-                    {# the bar turns green only when the pantry covers everything #}
-                    <div class="match-bar mt-2">
-                        <div class="match-bar__fill {% if not item.can_cook %}match-bar__fill--partial{% endif %}"
-                             style="width: {{ item.match_percent }}%;"></div>
-                    </div>
-                </a>
+<div class="row row-cols-1 row-cols-md-2 g-3">
+    {% for item in scored_recipes %}
+    <div class="col">
+        <a href="{% url 'recipes:recipe_detail' item.recipe.id %}" class="card recipe-card p-3">
+            <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                <h5 class="recipe-card__title mb-0">
+                    <i class="bi {{ item.recipe.icon }}"></i> {{ item.recipe.title }}
+                </h5>
+                {% if item.can_cook %}
+                <span class="pill">Ready to cook</span> {% else %}
+                <span class="pill pill--warning">{{ item.match_percent }}%</span> {% endif %}
             </div>
-        {% endfor %}
-    </div>
-{% else %}
-    <div class="empty-state">
-        <span class="empty-state__icon">🍽️</span>
-        <p>There are no recipes in the system yet.</p>
-    </div>
-{% endif %}
 
-{% endblock %}
+            <small class="text-muted">
+                        You have {{ item.matched }} of {{ item.total }} ingredients
+                    </small> {# the bar turns green only when the pantry covers everything #}
+            <div class="match-bar mt-2">
+                <div class="match-bar__fill {% if not item.can_cook %}match-bar__fill--partial{% endif %}" style="width: {{ item.match_percent }}%;"></div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <span class="empty-state__icon"><i class="bi bi-egg-fried"></i></span>
+    <p>There are no recipes in the system yet.</p>
+</div>
+{% endif %} {% endblock %}
