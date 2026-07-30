@@ -5,7 +5,7 @@
         <a href="{% url 'recipes:recipe_detail' recipe.id %}" class="card recipe-card">
             <div class="recipe-card__banner">
                 {% if recipe.image_url %}
-                <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}" class="recipe-card__img"> {% else %} {{ recipe.icon }} {% endif %}
+                <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}" loading="lazy" class="recipe-card__img"> {% else %} {{ recipe.icon }} {% endif %}
             </div>
             <div class="recipe-card__body">
                 <h5 class="recipe-card__title">{{ recipe.title }}</h5>
