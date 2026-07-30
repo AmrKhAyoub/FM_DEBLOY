@@ -1,16 +1,19 @@
 from django.contrib.auth.decorators import login_required
-from django.db.models.aggregates import Sum
-from django.shortcuts import get_object_or_404, render
-from django.views.decorators.http import require_GET, require_POST
-from django.shortcuts import redirect
-from django.http import JsonResponse
+from django.core.paginator import Paginator
 from django.db.models import Sum
-
+from django.db.models.aggregates import Sum
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_GET, require_POST
 
 from pantry.models import PantryItem
 from shopping_list.models import ShoppingListItem
+
 from .forms import RecipeSearchFilterForm
-from .models import Ingredient, Recipe, FavoriteRecipe
+from .models import FavoriteRecipe, Ingredient, Recipe
+
+# A constant for pagination
+PAGINATE_BY = 6
 
 
 def get_pantry_quantities(user):
@@ -29,9 +32,9 @@ def _filter_recipes(request):
     recipes = Recipe.objects.all()
 
     if form.is_valid():
-        search_query = form.cleaned_data.get('search_query')
-        meal_type = form.cleaned_data.get('meal_type')
-        category = form.cleaned_data.get('category')
+        search_query = form.cleaned_data.get("search_query")
+        meal_type = form.cleaned_data.get("meal_type")
+        category = form.cleaned_data.get("category")
 
         if search_query:
             recipes = recipes.filter(title__icontains=search_query)
@@ -40,29 +43,33 @@ def _filter_recipes(request):
         if category:
             recipes = recipes.filter(category=category)
 
-    return recipes.order_by('title'), form
+    return recipes.order_by("title"), form
 
 
 @require_GET
 def recipe_list(request):
     recipes, form = _filter_recipes(request)
 
+    paginator = Paginator(recipes, PAGINATE_BY)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
     return render(
         request,
-        'recipes/recipe_list.html',
+        "recipes/recipe_list.html",
         {
-            'recipes': recipes[:20],
-            'form': form,
+            "recipes": page_obj,
+            "page_obj": page_obj,
+            "form": form,
         },
     )
-
 
 
 @login_required
 @require_GET
 def recipe_detail(request, recipe_id):
     recipe = get_object_or_404(
-        Recipe.objects.prefetch_related('recipeingredient_set__ingredient'),
+        Recipe.objects.prefetch_related("recipeingredient_set__ingredient"),
         id=recipe_id,
     )
 
@@ -84,41 +91,55 @@ def recipe_detail(request, recipe_id):
         # at least the amount the pantry is missing
         covers_shortfall = missing_qty > 0 and shopping_qty >= missing_qty
 
-        ingredients_with_status.append({
-            'ri': ri,
-            'has_enough': has_enough,
-            'available_qty': available_qty,
-            'missing_qty': missing_qty,
-            'shopping_qty': shopping_qty,
-            'covers_shortfall': covers_shortfall,
-        })
+        ingredients_with_status.append(
+            {
+                "ri": ri,
+                "has_enough": has_enough,
+                "available_qty": available_qty,
+                "missing_qty": missing_qty,
+                "shopping_qty": shopping_qty,
+                "covers_shortfall": covers_shortfall,
+            }
+        )
 
     all_missing_added = all(
-        item['has_enough'] or item['covers_shortfall']
+        item["has_enough"] or item["covers_shortfall"]
         for item in ingredients_with_status
     )
 
-    is_favorite = FavoriteRecipe.objects.filter(user=request.user, recipe=recipe).exists()
+    is_favorite = FavoriteRecipe.objects.filter(
+        user=request.user, recipe=recipe
+    ).exists()
 
     return render(
         request,
-        'recipes/recipe_detail.html',
+        "recipes/recipe_detail.html",
         {
-            'recipe': recipe,
-            'ingredients_with_status': ingredients_with_status,
-            'all_missing_added': all_missing_added,
-            'is_favorite': is_favorite,
+            "recipe": recipe,
+            "ingredients_with_status": ingredients_with_status,
+            "all_missing_added": all_missing_added,
+            "is_favorite": is_favorite,
         },
     )
+
 
 @login_required
 @require_GET
 def recommended_recipes(request):
     pantry_ingredient_ids = set(
-        PantryItem.objects.filter(user=request.user).values_list('ingredient_id', flat=True)
+        PantryItem.objects.filter(user=request.user).values_list(
+            "ingredient_id", flat=True
+        )
     )
 
-    all_recipes = Recipe.objects.prefetch_related('recipeingredient_set__ingredient')
+    if not pantry_ingredient_ids:
+        return render(
+            request,
+            "recipes/recommended.html",
+            {"scored_recipes": []},
+        )
+
+    all_recipes = Recipe.objects.prefetch_related("recipeingredient_set__ingredient")
     scored_recipes = []
 
     for recipe in all_recipes:
@@ -126,29 +147,37 @@ def recommended_recipes(request):
 
         total_needed = len(recipe_ingredients)
         matched = sum(
-            1
-            for ri in recipe_ingredients
-            if ri.ingredient.id in pantry_ingredient_ids
+            1 for ri in recipe_ingredients if ri.ingredient.id in pantry_ingredient_ids
         )
 
-        # rank by the percentage of ingredients we own, not the raw count,
-        # so a short recipe you can fully cook beats a long one you can't
-        match_percent = round(matched / total_needed * 100) if total_needed else 0
+        if matched > 0:
+            # rank by the percentage of ingredients we own, not the raw count,
+            # so a short recipe you can fully cook beats a long one you can't
+            match_percent = round(matched / total_needed * 100) if total_needed else 0
 
-        scored_recipes.append({
-            'recipe': recipe,
-            'matched': matched,
-            'total': total_needed,
-            'match_percent': match_percent,
-            'can_cook': total_needed > 0 and matched == total_needed,
-        })
+            scored_recipes.append(
+                {
+                    "recipe": recipe,
+                    "matched": matched,
+                    "total": total_needed,
+                    "match_percent": match_percent,
+                    "can_cook": total_needed > 0 and matched == total_needed,
+                }
+            )
 
-    scored_recipes.sort(key=lambda x: (x['match_percent'], x['matched']), reverse=True)
+    scored_recipes.sort(key=lambda x: (x["match_percent"], x["matched"]), reverse=True)
+
+    paginator = Paginator(scored_recipes, PAGINATE_BY)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
 
     return render(
         request,
-        'recipes/recommended.html',
-        {'scored_recipes': scored_recipes},
+        "recipes/recommended.html",
+        {
+            "scored_recipes": page_obj,
+            "page_obj": page_obj,
+        },
     )
 
 
@@ -158,8 +187,8 @@ def live_search(request):
 
     return render(
         request,
-        'recipes/_recipe_results.html',
-        {'recipes': recipes[:20]},
+        "recipes/_recipe_results.html",
+        {"recipes": recipes[:20]},
     )
 
 
@@ -195,11 +224,16 @@ def favorite_recipes(request):
         .order_by("recipe__title")
     )
 
+    paginator = Paginator(favorites, PAGINATE_BY)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
     return render(
         request,
         "recipes/favorites.html",
         {
-            "favorites": favorites,
+            "favorites": page_obj,
+            "page_obj": page_obj,
         },
     )
 
@@ -218,9 +252,7 @@ def remove_favorite(request, recipe_id):
 @login_required
 @require_POST
 def clear_favorites(request):
-    FavoriteRecipe.objects.filter(
-        user=request.user
-    ).delete()
+    FavoriteRecipe.objects.filter(user=request.user).delete()
 
     return redirect("recipes:favorite_recipes")
 
@@ -228,17 +260,14 @@ def clear_favorites(request):
 @login_required
 @require_GET
 def ingredient_search(request):
-    query = request.GET.get('q', '').strip()
+    query = request.GET.get("q", "").strip()
 
     if len(query) < 1:
-        return JsonResponse({'results': []})
+        return JsonResponse({"results": []})
 
-    ingredients = Ingredient.objects.filter(
-        title__icontains=query
-    ).order_by('title')
+    ingredients = Ingredient.objects.filter(title__icontains=query).order_by("title")
 
     results = [
-        {'id': ing.id, 'title': ing.title, 'unit': ing.unit}
-        for ing in ingredients
+        {"id": ing.id, "title": ing.title, "unit": ing.unit} for ing in ingredients
     ]
-    return JsonResponse({'results': results})
+    return JsonResponse({"results": results})
